@@ -1,0 +1,120 @@
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
+
+import type {
+  CreateTaskInput,
+  UpdateTaskInput,
+} from '../../foundation/types/task'
+
+import {
+  completeTask,
+  createTask,
+  deleteTask,
+  getActiveTasks,
+  getArchivedTasks,
+  getTaskById,
+  restoreTask,
+  updateTask,
+} from './task.service'
+
+export function useActiveTasks() {
+  return useQuery({
+    queryKey: ['tasks', 'active'],
+    queryFn: getActiveTasks,
+  })
+}
+
+export function useArchivedTasks() {
+  return useQuery({
+    queryKey: ['tasks', 'archived'],
+    queryFn: getArchivedTasks,
+  })
+}
+
+export function useTask(id: string) {
+  return useQuery({
+    queryKey: ['tasks', 'detail', id],
+    queryFn: () => getTaskById(id),
+    enabled: Boolean(id),
+  })
+}
+
+export function useCreateTask() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (input: CreateTaskInput) => createTask(input),
+
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ['tasks'],
+      })
+    },
+  })
+}
+
+export function useUpdateTask() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      input,
+    }: {
+      id: string
+      input: UpdateTaskInput
+    }) => updateTask(id, input),
+
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ['tasks'],
+      })
+    },
+  })
+}
+
+export function useCompleteTask() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: string) => completeTask(id),
+
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ['tasks'],
+      })
+    },
+  })
+}
+
+export function useRestoreTask() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: string) => restoreTask(id),
+
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ['tasks'],
+      })
+    },
+  })
+}
+
+export function useDeleteTask() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: string) => deleteTask(id),
+
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ['tasks'],
+      })
+    },
+  })
+}
+ 
