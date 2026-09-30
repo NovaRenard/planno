@@ -10,6 +10,7 @@ import type {
 } from '../../foundation/types/task'
 
 import {
+  archiveTask,
   completeTask,
   createTask,
   deleteTask,
@@ -20,25 +21,30 @@ import {
   updateTask,
 } from './task.service'
 
-export function useActiveTasks() {
+export function useActiveTasks(workspaceId: string) {
   return useQuery({
-    queryKey: ['tasks', 'active'],
-    queryFn: getActiveTasks,
+    queryKey: ['tasks', workspaceId, 'active'],
+    queryFn: () => getActiveTasks(workspaceId),
+    enabled: Boolean(workspaceId),
   })
 }
 
-export function useArchivedTasks() {
+export function useArchivedTasks(workspaceId: string) {
   return useQuery({
-    queryKey: ['tasks', 'archived'],
-    queryFn: getArchivedTasks,
+    queryKey: ['tasks', workspaceId, 'archived'],
+    queryFn: () => getArchivedTasks(workspaceId),
+    enabled: Boolean(workspaceId),
   })
 }
 
-export function useTask(id: string) {
+export function useTask(
+  workspaceId: string,
+  id: string,
+) {
   return useQuery({
-    queryKey: ['tasks', 'detail', id],
-    queryFn: () => getTaskById(id),
-    enabled: Boolean(id),
+    queryKey: ['tasks', workspaceId, 'detail', id],
+    queryFn: () => getTaskById(id, workspaceId),
+    enabled: Boolean(workspaceId && id),
   })
 }
 
@@ -46,8 +52,8 @@ export function useCreateTask() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (input: CreateTaskInput) => createTask(input),
-
+    mutationFn: (input: CreateTaskInput) =>
+      createTask(input),
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: ['tasks'],
@@ -67,7 +73,6 @@ export function useUpdateTask() {
       id: string
       input: UpdateTaskInput
     }) => updateTask(id, input),
-
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: ['tasks'],
@@ -81,7 +86,19 @@ export function useCompleteTask() {
 
   return useMutation({
     mutationFn: (id: string) => completeTask(id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ['tasks'],
+      })
+    },
+  })
+}
 
+export function useArchiveTask() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: string) => archiveTask(id),
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: ['tasks'],
@@ -95,7 +112,6 @@ export function useRestoreTask() {
 
   return useMutation({
     mutationFn: (id: string) => restoreTask(id),
-
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: ['tasks'],
@@ -109,7 +125,6 @@ export function useDeleteTask() {
 
   return useMutation({
     mutationFn: (id: string) => deleteTask(id),
-
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: ['tasks'],
@@ -117,4 +132,3 @@ export function useDeleteTask() {
     },
   })
 }
- 
