@@ -6,6 +6,7 @@ const columns = [
     title: 'To do',
     count: 0,
     accent: 'todo',
+    hint: 'Backlog',
     description:
       'Tasks waiting to be started will appear here.',
   },
@@ -13,6 +14,7 @@ const columns = [
     title: 'In progress',
     count: 0,
     accent: 'progress',
+    hint: 'Active work',
     description:
       'Tasks currently being worked on will appear here.',
   },
@@ -20,6 +22,7 @@ const columns = [
     title: 'Done',
     count: 0,
     accent: 'done',
+    hint: 'Completed',
     description:
       'Completed tasks will appear here.',
   },
@@ -65,12 +68,18 @@ export function KanbanPage() {
             className="kanban-column"
           >
             <header className="kanban-column-header">
-              <div className="kanban-column-title">
-                <span
-                  className={`kanban-dot kanban-dot-${column.accent}`}
-                />
+              <div>
+                <span className="kanban-column-hint">
+                  {column.hint}
+                </span>
 
-                <h3>{column.title}</h3>
+                <div className="kanban-column-title">
+                  <span
+                    className={`kanban-dot kanban-dot-${column.accent}`}
+                  />
+
+                  <h3>{column.title}</h3>
+                </div>
               </div>
 
               <span className="kanban-count">
@@ -78,7 +87,26 @@ export function KanbanPage() {
               </span>
             </header>
 
+            <div className="kanban-column-metrics">
+              <span>
+                <strong>0</strong>
+                cards
+              </span>
+
+              <span>
+                <strong>0%</strong>
+                load
+              </span>
+            </div>
+
             <div className="kanban-column-content">
+              <div className="kanban-drop-zone">
+                <span
+                  className={`kanban-dot kanban-dot-${column.accent}`}
+                />
+                Ready for cards
+              </div>
+
               <EmptyState
                 title="Nothing here yet"
                 description={column.description}

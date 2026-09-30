@@ -4,18 +4,22 @@ import { NavLink } from 'react-router-dom'
 const mobileNavigation = [
   {
     label: 'Home',
+    icon: '⌂',
     to: '/',
   },
   {
     label: 'Tasks',
+    icon: '✓',
     to: '/tasks',
   },
   {
     label: 'Kanban',
+    icon: '▦',
     to: '/kanban',
   },
   {
     label: 'Calendar',
+    icon: '◷',
     to: '/calendar',
   },
 ]
@@ -23,22 +27,27 @@ const mobileNavigation = [
 const moreNavigation = [
   {
     label: 'Table',
+    icon: '☷',
     to: '/tasks',
   },
   {
     label: 'Templates',
+    icon: '◇',
     to: '/templates',
   },
   {
     label: 'Archive',
+    icon: '□',
     to: '/archive',
   },
   {
     label: 'Settings',
+    icon: '⚙',
     to: '/settings',
   },
   {
     label: 'Profile',
+    icon: '◉',
     to: '/profile',
   },
 ]
@@ -95,6 +104,9 @@ export function MobileNavigation() {
                 className="mobile-more-link"
                 onClick={closeMoreMenu}
               >
+                <span aria-hidden="true">
+                  {item.icon}
+                </span>
                 {item.label}
               </NavLink>
             ))}
@@ -102,11 +114,12 @@ export function MobileNavigation() {
             <button
               type="button"
               className="mobile-more-link"
-              onClick={closeMoreMenu}
-            >
-              Workspace
-            </button>
-          </nav>
+            onClick={closeMoreMenu}
+          >
+            <span aria-hidden="true">✦</span>
+            Workspace
+          </button>
+        </nav>
         </section>
       )}
 
@@ -126,6 +139,12 @@ export function MobileNavigation() {
                 : 'mobile-navigation-item'
             }
           >
+            <span
+              className="mobile-navigation-icon"
+              aria-hidden="true"
+            >
+              {item.icon}
+            </span>
             {item.label}
           </NavLink>
         ))}
@@ -141,6 +160,12 @@ export function MobileNavigation() {
           aria-expanded={isMoreOpen}
           aria-controls="mobile-more-menu"
         >
+          <span
+            className="mobile-navigation-icon"
+            aria-hidden="true"
+          >
+            ⋯
+          </span>
           More
         </button>
       </nav>

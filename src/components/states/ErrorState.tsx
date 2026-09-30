@@ -9,9 +9,16 @@ export function ErrorState({
 }: ErrorStateProps) {
   return (
     <div
-      className="state-card"
+      className="state-card state-card-error"
       role="alert"
     >
+      <div
+        className="state-icon state-icon-error"
+        aria-hidden="true"
+      >
+        !
+      </div>
+
       <h3>{title}</h3>
       <p>{message}</p>
     </div>

@@ -1,17 +1,17 @@
 import { NavLink } from 'react-router-dom'
 
 const mainNavigation = [
-  { label: 'Overview', shortLabel: 'O', to: '/' },
-  { label: 'Kanban', shortLabel: 'K', to: '/kanban' },
-  { label: 'Tasks', shortLabel: 'T', to: '/tasks' },
-  { label: 'Calendar', shortLabel: 'C', to: '/calendar' },
-  { label: 'Templates', shortLabel: 'M', to: '/templates' },
-  { label: 'Archive', shortLabel: 'A', to: '/archive' },
+  { label: 'Overview', icon: '⌂', to: '/' },
+  { label: 'Kanban', icon: '▦', to: '/kanban' },
+  { label: 'Tasks', icon: '✓', to: '/tasks' },
+  { label: 'Calendar', icon: '◷', to: '/calendar' },
+  { label: 'Templates', icon: '◇', to: '/templates' },
+  { label: 'Archive', icon: '□', to: '/archive' },
 ]
 
 const accountNavigation = [
-  { label: 'Settings', shortLabel: 'S', to: '/settings' },
-  { label: 'Profile', shortLabel: 'P', to: '/profile' },
+  { label: 'Settings', icon: '⚙', to: '/settings' },
+  { label: 'Profile', icon: '◉', to: '/profile' },
 ]
 
 export function Sidebar() {
@@ -43,7 +43,7 @@ export function Sidebar() {
                   }
                 >
                   <span className="sidebar-link-icon">
-                    {item.shortLabel}
+                    {item.icon}
                   </span>
 
                   <span>{item.label}</span>
@@ -70,7 +70,7 @@ export function Sidebar() {
                   }
                 >
                   <span className="sidebar-link-icon">
-                    {item.shortLabel}
+                    {item.icon}
                   </span>
 
                   <span>{item.label}</span>
@@ -87,6 +87,11 @@ export function Sidebar() {
             <strong>Zhazira</strong>
             <span>Student</span>
           </div>
+
+          <span
+            className="sidebar-user-status"
+            aria-label="Online"
+          />
         </div>
       </div>
     </aside>

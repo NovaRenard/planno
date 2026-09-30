@@ -7,7 +7,7 @@ export function LoadingState({
 }: LoadingStateProps) {
   return (
     <div
-      className="state-card"
+      className="state-card state-card-loading"
       role="status"
       aria-live="polite"
     >
@@ -17,6 +17,15 @@ export function LoadingState({
       />
 
       <p>{message}</p>
+
+      <div
+        className="state-skeleton-list"
+        aria-hidden="true"
+      >
+        <span />
+        <span />
+        <span />
+      </div>
     </div>
   )
 }

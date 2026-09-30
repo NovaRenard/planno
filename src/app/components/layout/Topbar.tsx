@@ -63,12 +63,25 @@ export function Topbar() {
       </div>
 
       <div className="topbar-actions">
+        <span className="topbar-status">
+          <span
+            className="topbar-status-dot"
+            aria-hidden="true"
+          />
+          In focus
+        </span>
+
         <Link
           to="/tasks"
           className="topbar-search"
           aria-label="Open tasks search"
         >
-          <span>⌕</span>
+          <span
+            className="topbar-search-icon"
+            aria-hidden="true"
+          >
+            ⌕
+          </span>
           <span className="topbar-search-text">
             Search
           </span>
@@ -85,6 +98,13 @@ export function Topbar() {
 
           <span className="topbar-profile-name">
             Zhazira
+          </span>
+
+          <span
+            className="topbar-profile-caret"
+            aria-hidden="true"
+          >
+            ▾
           </span>
         </Link>
       </div>
