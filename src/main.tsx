@@ -7,6 +7,7 @@ import {
 import { BrowserRouter } from 'react-router-dom'
 
 import App from './App'
+import { AuthGate } from './features/auth/AuthGate'
 import { AuthProvider } from './features/auth/AuthProvider'
 import { WorkspaceProvider } from './features/workspaces/WorkspaceProvider'
 
@@ -19,9 +20,11 @@ createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <WorkspaceProvider>
-            <App />
-          </WorkspaceProvider>
+          <AuthGate>
+            <WorkspaceProvider>
+              <App />
+            </WorkspaceProvider>
+          </AuthGate>
         </AuthProvider>
       </QueryClientProvider>
     </BrowserRouter>
