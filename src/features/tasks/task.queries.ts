@@ -15,6 +15,7 @@ import {
   deleteTask,
   getActiveTasks,
   getArchivedTasks,
+  getTaskById,
   restoreTask,
   updateTask,
 } from './task.service'
@@ -30,6 +31,14 @@ export function useArchivedTasks() {
   return useQuery({
     queryKey: ['tasks', 'archived'],
     queryFn: getArchivedTasks,
+  })
+}
+
+export function useTask(id: string) {
+  return useQuery({
+    queryKey: ['tasks', 'detail', id],
+    queryFn: () => getTaskById(id),
+    enabled: Boolean(id),
   })
 }
 
