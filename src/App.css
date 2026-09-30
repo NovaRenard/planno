@@ -1287,3 +1287,107 @@
     max-width: 130px;
   }
 }
+
+
+.templates-page-heading {
+  margin-bottom: 20px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.template-create-form {
+  margin-bottom: 18px;
+  display: grid;
+  gap: 14px;
+}
+
+.template-create-form label {
+  display: grid;
+  gap: 6px;
+}
+
+.template-create-form label > span {
+  color: var(--text-soft);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.template-create-form input,
+.template-create-form textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: #ffffff;
+  color: var(--text);
+  font: inherit;
+}
+
+.template-form-actions,
+.template-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.template-list {
+  display: grid;
+  gap: 10px;
+}
+
+.template-card {
+  padding: 14px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: #ffffff;
+}
+
+.template-card > div:first-child {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.template-card strong {
+  color: var(--text);
+}
+
+.template-card p {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.template-card span {
+  color: var(--text-faint);
+  font-size: 11px;
+  text-transform: capitalize;
+}
+
+.template-card-actions button {
+  min-height: 34px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface-soft);
+  color: var(--primary);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  .templates-page-heading,
+  .template-card {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
