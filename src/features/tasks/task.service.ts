@@ -6,34 +6,44 @@ import type {
   UpdateTaskInput,
 } from '../../foundation/types/task'
 
-export async function getActiveTasks(): Promise<Task[]> {
+export async function getActiveTasks(
+  workspaceId: string,
+): Promise<Task[]> {
   const { data, error } = await supabase
     .from('tasks')
     .select('*')
+    .eq('workspace_id', workspaceId)
     .is('archived_at', null)
+    .order('updated_at', { ascending: false })
 
   if (error) {
     throw error
   }
 
-  return data ?? []
+  return (data ?? []) as Task[]
 }
 
-export async function getTaskById(id: string): Promise<Task> {
+export async function getTaskById(
+  id: string,
+  workspaceId: string,
+): Promise<Task> {
   const { data, error } = await supabase
     .from('tasks')
     .select('*')
     .eq('id', id)
+    .eq('workspace_id', workspaceId)
     .single()
 
-    if (error) {
+  if (error) {
     throw error
-  } 
+  }
 
   return data as Task
 }
 
-export async function createTask(input: CreateTaskInput): Promise<Task> {
+export async function createTask(
+  input: CreateTaskInput,
+): Promise<Task> {
   const { data, error } = await supabase
     .from('tasks')
     .insert(input)
@@ -44,12 +54,12 @@ export async function createTask(input: CreateTaskInput): Promise<Task> {
     throw error
   }
 
-  return data
+  return data as Task
 }
 
 export async function updateTask(
   id: string,
-  input: UpdateTaskInput
+  input: UpdateTaskInput,
 ): Promise<Task> {
   const { data, error } = await supabase
     .from('tasks')
@@ -62,71 +72,52 @@ export async function updateTask(
     throw error
   }
 
-  return data
+  return data as Task
 }
 
 export async function changeTaskStatus(
   id: string,
-  status: Task['status']
+  status: Task['status'],
 ): Promise<Task> {
   return updateTask(id, { status })
 }
 
 export async function changeTaskPriority(
   id: string,
-  priority: Task['priority']
+  priority: Task['priority'],
 ): Promise<Task> {
   return updateTask(id, { priority })
-} 
+}
 
 export async function changeTaskDate(
   id: string,
-  taskDate: string | null
+  taskDate: string | null,
 ): Promise<Task> {
   return updateTask(id, { task_date: taskDate })
 }
 
 export async function changeTaskDeadline(
   id: string,
-  dueAt: string | null
+  dueAt: string | null,
 ): Promise<Task> {
-  return updateTask(id, { due_at: dueAt }) 
+  return updateTask(id, { due_at: dueAt })
 }
 
 export async function changeTaskAssignee(
   id: string,
-  assignedTo: string | null
+  assignedTo: string | null,
 ): Promise<Task> {
   return updateTask(id, { assigned_to: assignedTo })
 }
 
-export async function completeTask(id: string): Promise<Task> {
-  const now = new Date().toISOString()
-
+export async function completeTask(
+  id: string,
+): Promise<Task> {
   const { data, error } = await supabase
     .from('tasks')
     .update({
       status: 'done',
-      completed_at: now,
-      archived_at: now,
-    })
-    .eq('id', id)
-    .select()
-    .single()
-
-  if (error) {
-    throw error
-  }
-
-  return data
-}
-
-export async function restoreTask(id: string): Promise<Task> {
-  const { data, error } = await supabase
-    .from('tasks')
-    .update({
-      status: 'todo',
-      completed_at: null,
+      completed_at: new Date().toISOString(),
       archived_at: null,
     })
     .eq('id', id)
@@ -137,10 +128,50 @@ export async function restoreTask(id: string): Promise<Task> {
     throw error
   }
 
-  return data
+  return data as Task
 }
 
-export async function deleteTask(id: string): Promise<void> {
+export async function archiveTask(
+  id: string,
+): Promise<Task> {
+  const { data, error } = await supabase
+    .from('tasks')
+    .update({
+      archived_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) {
+    throw error
+  }
+
+  return data as Task
+}
+
+export async function restoreTask(
+  id: string,
+): Promise<Task> {
+  const { data, error } = await supabase
+    .from('tasks')
+    .update({
+      archived_at: null,
+    })
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) {
+    throw error
+  }
+
+  return data as Task
+}
+
+export async function deleteTask(
+  id: string,
+): Promise<void> {
   const { error } = await supabase
     .from('tasks')
     .delete()
@@ -151,11 +182,15 @@ export async function deleteTask(id: string): Promise<void> {
   }
 }
 
-export async function getArchivedTasks(): Promise<Task[]> {
+export async function getArchivedTasks(
+  workspaceId: string,
+): Promise<Task[]> {
   const { data, error } = await supabase
     .from('tasks')
     .select('*')
+    .eq('workspace_id', workspaceId)
     .not('archived_at', 'is', null)
+    .order('archived_at', { ascending: false })
 
   if (error) {
     throw error
