@@ -1,6 +1,6 @@
 import {
-  FormEvent,
   useState,
+  type FormEvent,
 } from 'react'
 
 import { EmptyState } from '../components/states/EmptyState'
