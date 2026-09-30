@@ -84,7 +84,10 @@ with check (
     and private.get_workspace_role(
         workspace_id,
         (select auth.uid())
-    ) is not null
+    ) in (
+        'owner'::public.workspace_role,
+        'editor'::public.workspace_role
+    )
 );
 
 create policy "tasks_update_workspace_member"
@@ -95,13 +98,19 @@ using (
     private.get_workspace_role(
         workspace_id,
         (select auth.uid())
-    ) is not null
+    ) in (
+        'owner'::public.workspace_role,
+        'editor'::public.workspace_role
+    )
 )
 with check (
     private.get_workspace_role(
         workspace_id,
         (select auth.uid())
-    ) is not null
+    ) in (
+        'owner'::public.workspace_role,
+        'editor'::public.workspace_role
+    )
 );
 
 create policy "tasks_delete_workspace_member"
@@ -112,7 +121,10 @@ using (
     private.get_workspace_role(
         workspace_id,
         (select auth.uid())
-    ) is not null
+    ) in (
+        'owner'::public.workspace_role,
+        'editor'::public.workspace_role
+    )
 );
 
 create policy "templates_select_workspace_member"
@@ -135,7 +147,10 @@ with check (
     and private.get_workspace_role(
         workspace_id,
         (select auth.uid())
-    ) is not null
+    ) in (
+        'owner'::public.workspace_role,
+        'editor'::public.workspace_role
+    )
 );
 
 create policy "templates_update_workspace_member"
@@ -146,13 +161,19 @@ using (
     private.get_workspace_role(
         workspace_id,
         (select auth.uid())
-    ) is not null
+    ) in (
+        'owner'::public.workspace_role,
+        'editor'::public.workspace_role
+    )
 )
 with check (
     private.get_workspace_role(
         workspace_id,
         (select auth.uid())
-    ) is not null
+    ) in (
+        'owner'::public.workspace_role,
+        'editor'::public.workspace_role
+    )
 );
 
 create policy "templates_delete_workspace_member"
@@ -163,7 +184,10 @@ using (
     private.get_workspace_role(
         workspace_id,
         (select auth.uid())
-    ) is not null
+    ) in (
+        'owner'::public.workspace_role,
+        'editor'::public.workspace_role
+    )
 );
 
 grant select, insert, update, delete
