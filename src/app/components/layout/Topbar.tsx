@@ -1,5 +1,8 @@
 import { Link, useLocation } from 'react-router-dom'
 
+import { useAuth } from '../../../features/auth/AuthProvider'
+import { useWorkspace } from '../../../features/workspaces/WorkspaceProvider'
+
 const pageTitles: Record<
   string,
   {
@@ -9,7 +12,7 @@ const pageTitles: Record<
 > = {
   '/': {
     eyebrow: 'Workspace overview',
-    title: 'Good evening, Zhazira',
+    title: 'Dashboard',
   },
   '/kanban': {
     eyebrow: 'Task management',
@@ -41,14 +44,39 @@ const pageTitles: Record<
   },
 }
 
+function initials(value: string) {
+  const parts = value
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+
+  if (parts.length === 0) return 'U'
+
+  return parts
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('')
+}
+
 export function Topbar() {
   const location = useLocation()
+  const { user } = useAuth()
+  const {
+    workspaces,
+    currentWorkspace,
+    setCurrentWorkspace,
+  } = useWorkspace()
 
   const currentPage =
     pageTitles[location.pathname] ?? {
       eyebrow: 'Planno',
       title: 'Workspace',
     }
+
+  const fullName =
+    user?.user_metadata?.full_name ||
+    user?.email ||
+    'User'
 
   return (
     <header className="topbar">
@@ -63,12 +91,39 @@ export function Topbar() {
       </div>
 
       <div className="topbar-actions">
+        {workspaces.length > 0 ? (
+          <select
+            className="topbar-workspace-selector"
+            aria-label="Current workspace"
+            value={currentWorkspace?.id ?? ''}
+            onChange={(event) => {
+              const workspace = workspaces.find(
+                (item) =>
+                  item.id === event.target.value,
+              )
+
+              if (workspace) {
+                setCurrentWorkspace(workspace)
+              }
+            }}
+          >
+            {workspaces.map((workspace) => (
+              <option
+                key={workspace.id}
+                value={workspace.id}
+              >
+                {workspace.name}
+              </option>
+            ))}
+          </select>
+        ) : null}
+
         <span className="topbar-status">
           <span
             className="topbar-status-dot"
             aria-hidden="true"
           />
-          In focus
+          {currentWorkspace?.name ?? 'No workspace'}
         </span>
 
         <Link
@@ -93,11 +148,11 @@ export function Topbar() {
           aria-label="Open profile"
         >
           <span className="topbar-profile-avatar">
-            ZH
+            {initials(fullName)}
           </span>
 
           <span className="topbar-profile-name">
-            Zhazira
+            {fullName}
           </span>
 
           <span
