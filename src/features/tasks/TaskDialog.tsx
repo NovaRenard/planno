@@ -7,11 +7,13 @@ import { TaskForm } from './TaskForm'
 type TaskDialogProps = {
   open: boolean
   onClose: () => void
+  projectId?: string
 }
 
 export function TaskDialog({
   open,
   onClose,
+  projectId,
 }: TaskDialogProps) {
   const { user, loading: authLoading } = useAuth()
   const {
@@ -65,6 +67,7 @@ export function TaskDialog({
           <TaskForm
             createdBy={user.id}
             workspaceId={currentWorkspace.id}
+            projectId={projectId}
             onSuccess={onClose}
           />
         )}
