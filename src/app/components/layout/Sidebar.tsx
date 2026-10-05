@@ -14,7 +14,6 @@ const mainNavigation = [
 
 const accountNavigation = [
   { label: 'Settings', icon: '⚙', to: '/settings' },
-  { label: 'Profile', icon: '◉', to: '/profile' },
 ]
 
 function initials(value: string) {
@@ -51,6 +50,7 @@ export function Sidebar() {
           <p className="sidebar-brand-name">
             Planno
           </p>
+
           <p className="sidebar-brand-caption">
             {currentWorkspace?.name ??
               'Personal workspace'}
@@ -123,6 +123,7 @@ export function Sidebar() {
 
           <div className="sidebar-user-text">
             <strong>{fullName}</strong>
+
             <span>
               {currentWorkspace?.name ??
                 'No workspace'}
