@@ -61,12 +61,27 @@ export async function updateTask(
   id: string,
   input: UpdateTaskInput,
 ): Promise<Task> {
-  const { data, error } = await supabase
-    .from('tasks')
-    .update(input)
-    .eq('id', id)
-    .select()
-    .single()
+  const updatePayload:
+    UpdateTaskInput & {
+      completed_at?: string | null
+    } = {
+      ...input,
+    }
+
+  if (input.status !== undefined) {
+    updatePayload.completed_at =
+      input.status === 'done'
+        ? new Date().toISOString()
+        : null
+  }
+
+  const { data, error } =
+    await supabase
+      .from('tasks')
+      .update(updatePayload)
+      .eq('id', id)
+      .select()
+      .single()
 
   if (error) {
     throw error

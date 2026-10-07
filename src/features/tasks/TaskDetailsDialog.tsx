@@ -1,6 +1,11 @@
-import { useEffect } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useState,
+} from 'react'
 
 import type { Task } from '../../foundation/types/task'
+import { TaskForm } from './TaskForm'
 
 import './TaskDetailsDialog.css'
 
@@ -9,81 +14,124 @@ type TaskDetailsDialogProps = {
   onClose: () => void
 }
 
-function formatStatus(status: Task['status']) {
-  if (status === 'in_progress') return 'In progress'
-  if (status === 'done') return 'Done'
+function formatStatus(
+  status: Task['status'],
+) {
+  if (status === 'in_progress') {
+    return 'In progress'
+  }
+
+  if (status === 'done') {
+    return 'Done'
+  }
 
   return 'To do'
 }
 
-function formatPriority(priority: Task['priority']) {
+function formatPriority(
+  priority: Task['priority'],
+) {
   return (
-    priority.charAt(0).toUpperCase() +
+    priority
+      .charAt(0)
+      .toUpperCase() +
     priority.slice(1)
   )
 }
 
-function formatDate(value: string | null) {
+function formatDate(
+  value: string | null,
+) {
   if (!value) {
     return '—'
   }
 
-  const dateOnlyPattern = /^\d{4}-\d{2}-\d{2}$/
+  const dateOnlyPattern =
+    /^\d{4}-\d{2}-\d{2}$/
 
-  const date = dateOnlyPattern.test(value)
-    ? new Date(`${value}T00:00:00`)
-    : new Date(value)
+  const date =
+    dateOnlyPattern.test(value)
+      ? new Date(
+          `${value}T00:00:00`,
+        )
+      : new Date(value)
 
-  if (Number.isNaN(date.getTime())) {
+  if (
+    Number.isNaN(date.getTime())
+  ) {
     return value
   }
 
-  return date.toLocaleDateString(undefined, {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
+  return date.toLocaleDateString(
+    undefined,
+    {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    },
+  )
 }
 
-function formatDateTime(value: string | null) {
+function formatDateTime(
+  value: string | null,
+) {
   if (!value) {
     return '—'
   }
 
   const date = new Date(value)
 
-  if (Number.isNaN(date.getTime())) {
+  if (
+    Number.isNaN(date.getTime())
+  ) {
     return value
   }
 
-  return date.toLocaleString(undefined, {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  return date.toLocaleString(
+    undefined,
+    {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    },
+  )
 }
 
 export function TaskDetailsDialog({
   task,
   onClose,
 }: TaskDetailsDialogProps) {
+  const [
+    isEditing,
+    setIsEditing,
+  ] = useState(false)
+
+  const closeDialog =
+    useCallback(() => {
+      setIsEditing(false)
+      onClose()
+    }, [onClose])
+
   useEffect(() => {
     if (!task) {
       return
     }
 
-    function handleKeyDown(event: KeyboardEvent) {
+    function handleKeyDown(
+      event: KeyboardEvent,
+    ) {
       if (event.key === 'Escape') {
-        onClose()
+        closeDialog()
       }
     }
 
     const previousOverflow =
       document.body.style.overflow
 
-    document.body.style.overflow = 'hidden'
+    document.body.style.overflow =
+      'hidden'
 
     window.addEventListener(
       'keydown',
@@ -99,7 +147,7 @@ export function TaskDetailsDialog({
         handleKeyDown,
       )
     }
-  }, [task, onClose])
+  }, [task, closeDialog])
 
   if (!task) {
     return null
@@ -110,8 +158,11 @@ export function TaskDetailsDialog({
       className="task-details-backdrop"
       role="presentation"
       onMouseDown={(event) => {
-        if (event.target === event.currentTarget) {
-          onClose()
+        if (
+          event.target ===
+          event.currentTarget
+        ) {
+          closeDialog()
         }
       }}
     >
@@ -124,7 +175,9 @@ export function TaskDetailsDialog({
         <header className="task-details-header">
           <div className="task-details-heading">
             <p className="page-eyebrow">
-              Task details
+              {isEditing
+                ? 'Edit task'
+                : 'Task details'}
             </p>
 
             <h2 id="task-details-title">
@@ -132,124 +185,175 @@ export function TaskDetailsDialog({
             </h2>
           </div>
 
-          <button
-            type="button"
-            className="task-details-close"
-            onClick={onClose}
-            aria-label="Close task details"
-          >
-            ×
-          </button>
-        </header>
-
-        <div className="task-details-content">
-          <div className="task-details-badges">
-            <span
-              className={`task-details-status task-details-status-${task.status}`}
-            >
-              {formatStatus(task.status)}
-            </span>
-
-            <span
-              className={`priority-pill priority-${task.priority}`}
-            >
-              {formatPriority(task.priority)}
-            </span>
-          </div>
-
-          <section className="task-details-section">
-            <p className="task-details-label">
-              Description
-            </p>
-
-            <div className="task-details-description">
-              {task.description ? (
-                <p>{task.description}</p>
-              ) : (
-                <p className="task-details-muted">
-                  No description provided.
-                </p>
-              )}
-            </div>
-          </section>
-
-          <section
-            className="task-details-grid"
-            aria-label="Task information"
-          >
-            <DetailItem
-              label="Task date"
-              value={formatDate(task.task_date)}
-            />
-
-            <DetailItem
-              label="Deadline"
-              value={formatDateTime(task.due_at)}
-            />
-
-            <DetailItem
-              label="Assignee"
-              value={
-                task.assigned_to ??
-                'Unassigned'
-              }
-            />
-
-            <DetailItem
-              label="Status"
-              value={formatStatus(task.status)}
-            />
-
-            <DetailItem
-              label="Priority"
-              value={formatPriority(
-                task.priority,
-              )}
-            />
-
-            <DetailItem
-              label="Completed"
-              value={formatDateTime(
-                task.completed_at,
-              )}
-            />
-          </section>
-
-          <section className="task-details-section">
-            <p className="task-details-label">
-              Activity
-            </p>
-
-            <div className="task-details-activity">
-              <DetailItem
-                label="Created"
-                value={formatDateTime(
-                  task.created_at,
-                )}
-              />
-
-              <DetailItem
-                label="Last updated"
-                value={formatDateTime(
-                  task.updated_at,
-                )}
-              />
-            </div>
-          </section>
-
-          <footer className="task-details-footer">
-            <span className="task-details-id">
-              Task ID: {task.id}
-            </span>
+          <div className="task-details-header-actions">
+            {!isEditing && (
+              <button
+                type="button"
+                className="task-details-edit"
+                onClick={() =>
+                  setIsEditing(true)
+                }
+              >
+                Edit
+              </button>
+            )}
 
             <button
               type="button"
-              className="secondary-action"
-              onClick={onClose}
+              className="task-details-close"
+              onClick={closeDialog}
+              aria-label="Close task details"
             >
-              Close
+              ×
             </button>
-          </footer>
+          </div>
+        </header>
+
+        <div className="task-details-content">
+          {isEditing ? (
+            <div className="task-details-edit-form">
+              <TaskForm
+                createdBy={
+                  task.created_by
+                }
+                workspaceId={
+                  task.workspace_id
+                }
+                task={task}
+                onCancel={() =>
+                  setIsEditing(false)
+                }
+                onSuccess={
+                  closeDialog
+                }
+              />
+            </div>
+          ) : (
+            <>
+              <div className="task-details-badges">
+                <span
+                  className={`task-details-status task-details-status-${task.status}`}
+                >
+                  {formatStatus(
+                    task.status,
+                  )}
+                </span>
+
+                <span
+                  className={`priority-pill priority-${task.priority}`}
+                >
+                  {formatPriority(
+                    task.priority,
+                  )}
+                </span>
+              </div>
+
+              <section className="task-details-section">
+                <p className="task-details-label">
+                  Description
+                </p>
+
+                <div className="task-details-description">
+                  {task.description ? (
+                    <p>
+                      {
+                        task.description
+                      }
+                    </p>
+                  ) : (
+                    <p className="task-details-muted">
+                      No description
+                      provided.
+                    </p>
+                  )}
+                </div>
+              </section>
+
+              <section
+                className="task-details-grid"
+                aria-label="Task information"
+              >
+                <DetailItem
+                  label="Task date"
+                  value={formatDate(
+                    task.task_date,
+                  )}
+                />
+
+                <DetailItem
+                  label="Deadline"
+                  value={formatDateTime(
+                    task.due_at,
+                  )}
+                />
+
+                <DetailItem
+                  label="Assignee"
+                  value={
+                    task.assigned_to ??
+                    'Unassigned'
+                  }
+                />
+
+                <DetailItem
+                  label="Status"
+                  value={formatStatus(
+                    task.status,
+                  )}
+                />
+
+                <DetailItem
+                  label="Priority"
+                  value={formatPriority(
+                    task.priority,
+                  )}
+                />
+
+                <DetailItem
+                  label="Completed"
+                  value={formatDateTime(
+                    task.completed_at,
+                  )}
+                />
+              </section>
+
+              <section className="task-details-section">
+                <p className="task-details-label">
+                  Activity
+                </p>
+
+                <div className="task-details-activity">
+                  <DetailItem
+                    label="Created"
+                    value={formatDateTime(
+                      task.created_at,
+                    )}
+                  />
+
+                  <DetailItem
+                    label="Last updated"
+                    value={formatDateTime(
+                      task.updated_at,
+                    )}
+                  />
+                </div>
+              </section>
+
+              <footer className="task-details-footer">
+                <span className="task-details-id">
+                  Task ID: {task.id}
+                </span>
+
+                <button
+                  type="button"
+                  className="secondary-action"
+                  onClick={closeDialog}
+                >
+                  Close
+                </button>
+              </footer>
+            </>
+          )}
         </div>
       </section>
     </div>
