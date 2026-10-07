@@ -4,13 +4,18 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 
-import type { CreateTemplateInput } from '../../foundation/types/template'
+import type {
+  CreateTemplateInput,
+  UpdateTemplateInput,
+} from '../../foundation/types/template'
+
 import {
   createTaskFromTemplate,
   createTemplate,
   deleteTemplate,
   duplicateTemplate,
   getTemplates,
+  updateTemplate,
 } from './template.service'
 
 export function useTemplates(workspaceId: string) {
@@ -27,6 +32,30 @@ export function useCreateTemplate() {
   return useMutation({
     mutationFn: (input: CreateTemplateInput) =>
       createTemplate(input),
+
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ['templates'],
+      })
+    },
+  })
+}
+
+type UpdateTemplateMutationInput = {
+  id: string
+  input: UpdateTemplateInput
+}
+
+export function useUpdateTemplate() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      input,
+    }: UpdateTemplateMutationInput) =>
+      updateTemplate(id, input),
+
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: ['templates'],
@@ -41,6 +70,7 @@ export function useDeleteTemplate() {
   return useMutation({
     mutationFn: (id: string) =>
       deleteTemplate(id),
+
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: ['templates'],
@@ -62,6 +92,7 @@ export function useDuplicateTemplate(
         workspaceId,
         createdBy,
       ),
+
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: ['templates'],
@@ -83,6 +114,7 @@ export function useCreateTaskFromTemplate(
         workspaceId,
         createdBy,
       ),
+
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: ['tasks'],
