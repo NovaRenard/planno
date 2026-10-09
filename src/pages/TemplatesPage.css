@@ -267,3 +267,163 @@
     animation-duration: 1.2s;
   }
 }
+
+.template-confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+
+  padding: 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background:
+    rgba(15, 23, 42, 0.5);
+
+  backdrop-filter: blur(4px);
+}
+
+.template-confirm-dialog {
+  width: min(440px, 100%);
+
+  padding: 24px;
+
+  display: grid;
+  gap: 18px;
+
+  border: 1px solid var(--border);
+  border-radius: 20px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 24px 70px
+      rgba(15, 23, 42, 0.22);
+
+  animation:
+    template-confirm-in
+    180ms ease-out;
+}
+
+.template-confirm-icon {
+  width: 44px;
+  height: 44px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 999px;
+
+  background:
+    rgba(239, 68, 68, 0.11);
+
+  color: #dc2626;
+
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.template-confirm-dialog h3 {
+  margin: 0 0 8px;
+
+  color: var(--text);
+
+  font-size: 20px;
+}
+
+.template-confirm-dialog p {
+  margin: 0;
+
+  color: var(--text-soft);
+
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.template-confirm-dialog p strong {
+  color: var(--text);
+}
+
+.template-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+
+  padding-top: 4px;
+}
+
+.template-delete-confirm-button {
+  min-height: 40px;
+  padding: 8px 16px;
+
+  border: 1px solid #dc2626;
+  border-radius: 11px;
+
+  background: #dc2626;
+  color: #ffffff;
+
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition:
+    transform 150ms ease,
+    background 150ms ease,
+    opacity 150ms ease;
+}
+
+.template-delete-confirm-button:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.template-delete-confirm-button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.template-delete-confirm-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@keyframes template-confirm-in {
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(8px)
+      scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+@media (max-width: 640px) {
+  .template-confirm-backdrop {
+    padding: 16px;
+    align-items: flex-end;
+  }
+
+  .template-confirm-dialog {
+    width: 100%;
+    border-radius: 20px;
+  }
+
+  .template-confirm-actions {
+    flex-direction: column-reverse;
+  }
+
+  .template-confirm-actions button {
+    width: 100%;
+  }
+}

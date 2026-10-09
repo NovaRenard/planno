@@ -34,6 +34,11 @@ type ActionState = {
   status: ActionStatus
 }
 
+type PendingDelete = {
+  id: string
+  title: string
+}
+
 function getErrorMessage(
   error: unknown,
   fallback: string,
@@ -107,6 +112,13 @@ export function TemplatesPage() {
     null,
   )
 
+  const [
+    pendingDelete,
+    setPendingDelete,
+  ] = useState<PendingDelete | null>(
+    null,
+  )
+
   useEffect(() => {
     if (!notice) {
       return
@@ -121,6 +133,41 @@ export function TemplatesPage() {
       window.clearTimeout(timeoutId)
     }
   }, [notice])
+
+  useEffect(() => {
+    if (!pendingDelete) {
+      return
+    }
+
+    function handleKeyDown(
+      event: KeyboardEvent,
+    ) {
+      if (event.key === 'Escape') {
+        setPendingDelete(null)
+      }
+    }
+
+    const previousOverflow =
+      document.body.style.overflow
+
+    document.body.style.overflow =
+      'hidden'
+
+    window.addEventListener(
+      'keydown',
+      handleKeyDown,
+    )
+
+    return () => {
+      document.body.style.overflow =
+        previousOverflow
+
+      window.removeEventListener(
+        'keydown',
+        handleKeyDown,
+      )
+    }
+  }, [pendingDelete])
 
   function isWorking(key: string) {
     return (
@@ -254,6 +301,38 @@ export function TemplatesPage() {
     setTitle('')
     setDescription('')
     setShowForm(false)
+  }
+
+  async function confirmDelete() {
+    if (!pendingDelete) {
+      return
+    }
+
+    const template =
+      pendingDelete
+
+    const deleteKey =
+      `delete:${template.id}`
+
+    const deleted =
+      await performAction({
+        key: deleteKey,
+
+        action: () =>
+          deleteTemplate.mutateAsync(
+            template.id,
+          ),
+
+        successMessage:
+          `"${template.title}" deleted.`,
+
+        errorMessage:
+          'Could not delete template.',
+      })
+
+    if (deleted) {
+      setPendingDelete(null)
+    }
   }
 
   return (
@@ -532,31 +611,18 @@ export function TemplatesPage() {
                         className={getActionClass(
                           deleteKey,
                         )}
-                        onClick={() => {
-                          void performAction({
-                            key: deleteKey,
-
-                            action: () =>
-                              deleteTemplate.mutateAsync(
-                                template.id,
-                              ),
-
-                            successMessage:
-                              `"${template.title}" deleted.`,
-
-                            errorMessage:
-                              'Could not delete template.',
+                        onClick={() =>
+                          setPendingDelete({
+                            id: template.id,
+                            title:
+                              template.title,
                           })
-                        }}
+                        }
                         disabled={
                           deleteTemplate.isPending
                         }
                       >
-                        {isWorking(
-                          deleteKey,
-                        )
-                          ? 'Deleting...'
-                          : 'Delete'}
+                        Delete
                       </button>
                     </div>
                   </article>
@@ -566,6 +632,80 @@ export function TemplatesPage() {
           </div>
         )}
       </div>
+
+      {pendingDelete ? (
+        <div
+          className="template-confirm-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (
+              event.target ===
+              event.currentTarget &&
+              !deleteTemplate.isPending
+            ) {
+              setPendingDelete(null)
+            }
+          }}
+        >
+          <section
+            className="template-confirm-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="template-delete-title"
+            aria-describedby="template-delete-description"
+          >
+            <div className="template-confirm-icon">
+              !
+            </div>
+
+            <div>
+              <h3 id="template-delete-title">
+                Delete template?
+              </h3>
+
+              <p id="template-delete-description">
+                Are you sure you want to
+                delete{' '}
+                <strong>
+                  {pendingDelete.title}
+                </strong>
+                ? This action cannot be
+                undone.
+              </p>
+            </div>
+
+            <div className="template-confirm-actions">
+              <button
+                type="button"
+                className="secondary-action"
+                disabled={
+                  deleteTemplate.isPending
+                }
+                onClick={() =>
+                  setPendingDelete(null)
+                }
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="template-delete-confirm-button"
+                disabled={
+                  deleteTemplate.isPending
+                }
+                onClick={() => {
+                  void confirmDelete()
+                }}
+              >
+                {deleteTemplate.isPending
+                  ? 'Deleting...'
+                  : 'Delete template'}
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </div>
   )
 }
