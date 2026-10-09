@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import type { DragEvent } from 'react'
 
 import { EmptyState } from '../components/states/EmptyState'
 import { ErrorState } from '../components/states/ErrorState'
@@ -11,7 +12,10 @@ import {
   useUpdateTask,
 } from '../features/tasks/task.queries'
 import { useWorkspace } from '../features/workspaces/WorkspaceProvider'
-import type { TaskStatus } from '../foundation/types/task'
+import type {
+  Task,
+  TaskStatus,
+} from '../foundation/types/task'
 
 import './KanbanPage.css'
 
@@ -49,9 +53,14 @@ const columns: Array<{
 ]
 
 export function KanbanPage() {
-  const { currentWorkspace, loading: workspaceLoading } =
-    useWorkspace()
-  const workspaceId = currentWorkspace?.id ?? ''
+  const {
+    currentWorkspace,
+    loading: workspaceLoading,
+  } = useWorkspace()
+
+  const workspaceId =
+    currentWorkspace?.id ?? ''
+
   const {
     data: tasks = [],
     isLoading,
@@ -61,17 +70,129 @@ export function KanbanPage() {
   const updateTask = useUpdateTask()
   const completeTask = useCompleteTask()
   const archiveTask = useArchiveTask()
-  const [showCreateTask, setShowCreateTask] =
-    useState(false)
+
+  const [
+    showCreateTask,
+    setShowCreateTask,
+  ] = useState(false)
+
+  const [
+    draggingTaskId,
+    setDraggingTaskId,
+  ] = useState<string | null>(null)
+
+  const [
+    dragOverStatus,
+    setDragOverStatus,
+  ] = useState<TaskStatus | null>(null)
+
+  const draggingTask =
+    tasks.find(
+      (task) => task.id === draggingTaskId,
+    ) ?? null
+
+  function handleDragStart(
+    event: DragEvent<HTMLElement>,
+    task: Task,
+  ) {
+    setDraggingTaskId(task.id)
+
+    event.dataTransfer.effectAllowed =
+      'move'
+
+    event.dataTransfer.setData(
+      'text/plain',
+      task.id,
+    )
+  }
+
+  function handleDragEnd() {
+    setDraggingTaskId(null)
+    setDragOverStatus(null)
+  }
+
+  function handleDragOver(
+    event: DragEvent<HTMLElement>,
+    status: TaskStatus,
+  ) {
+    event.preventDefault()
+
+    event.dataTransfer.dropEffect =
+      'move'
+
+    setDragOverStatus(status)
+  }
+
+  function handleDragLeave(
+    event: DragEvent<HTMLElement>,
+  ) {
+    const nextTarget =
+      event.relatedTarget
+
+    if (
+      nextTarget instanceof Node &&
+      event.currentTarget.contains(
+        nextTarget,
+      )
+    ) {
+      return
+    }
+
+    setDragOverStatus(null)
+  }
+
+  function handleDrop(
+    event: DragEvent<HTMLElement>,
+    status: TaskStatus,
+  ) {
+    event.preventDefault()
+
+    const taskId =
+      draggingTaskId ||
+      event.dataTransfer.getData(
+        'text/plain',
+      )
+
+    setDraggingTaskId(null)
+    setDragOverStatus(null)
+
+    if (!taskId) {
+      return
+    }
+
+    const task = tasks.find(
+      (item) => item.id === taskId,
+    )
+
+    if (
+      !task ||
+      task.status === status ||
+      updateTask.isPending
+    ) {
+      return
+    }
+
+    updateTask.mutate({
+      id: task.id,
+      input: {
+        status,
+      },
+    })
+  }
 
   return (
     <div className="kanban-page">
       <header className="kanban-header">
         <div>
-          <p className="page-eyebrow">Workflow</p>
+          <p className="page-eyebrow">
+            Workflow
+          </p>
+
           <h2>Kanban board</h2>
+
           <p className="page-description">
-            See the status of your work at a glance.
+            Drag tasks between columns
+            to update their status.
           </p>
         </div>
 
@@ -79,14 +200,17 @@ export function KanbanPage() {
           <button
             type="button"
             className="primary-action"
-            onClick={() => setShowCreateTask(true)}
+            onClick={() =>
+              setShowCreateTask(true)
+            }
           >
             + New task
           </button>
         </div>
       </header>
 
-      {workspaceLoading || isLoading ? (
+      {workspaceLoading ||
+      isLoading ? (
         <LoadingState message="Loading board..." />
       ) : error ? (
         <ErrorState
@@ -100,14 +224,45 @@ export function KanbanPage() {
       ) : (
         <div className="kanban-board">
           {columns.map((column) => {
-            const columnTasks = tasks.filter(
-              (task) => task.status === column.status,
-            )
+            const columnTasks =
+              tasks.filter(
+                (task) =>
+                  task.status ===
+                  column.status,
+              )
+
+            const isDropTarget =
+              dragOverStatus ===
+                column.status &&
+              draggingTask?.status !==
+                column.status
 
             return (
               <section
                 key={column.status}
-                className="kanban-column"
+                className={[
+                  'kanban-column',
+                  isDropTarget
+                    ? 'kanban-column-drop-target'
+                    : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+                onDragOver={(event) =>
+                  handleDragOver(
+                    event,
+                    column.status,
+                  )
+                }
+                onDragLeave={
+                  handleDragLeave
+                }
+                onDrop={(event) =>
+                  handleDrop(
+                    event,
+                    column.status,
+                  )
+                }
               >
                 <header className="kanban-column-header">
                   <div>
@@ -119,18 +274,27 @@ export function KanbanPage() {
                       <span
                         className={`kanban-dot kanban-dot-${column.accent}`}
                       />
-                      <h3>{column.title}</h3>
+
+                      <h3>
+                        {column.title}
+                      </h3>
                     </div>
                   </div>
 
                   <span className="kanban-count">
-                    {columnTasks.length}
+                    {
+                      columnTasks.length
+                    }
                   </span>
                 </header>
 
                 <div className="kanban-column-metrics">
                   <span>
-                    <strong>{columnTasks.length}</strong>
+                    <strong>
+                      {
+                        columnTasks.length
+                      }
+                    </strong>
                     cards
                   </span>
 
@@ -150,87 +314,148 @@ export function KanbanPage() {
                 </div>
 
                 <div className="kanban-column-content">
-                  {columnTasks.length === 0 ? (
+                  {isDropTarget && (
+                    <div className="kanban-drop-indicator">
+                      Drop task here
+                    </div>
+                  )}
+
+                  {columnTasks.length ===
+                  0 ? (
                     <EmptyState
                       title="Nothing here yet"
-                      description={column.description}
+                      description={
+                        column.description
+                      }
                     />
                   ) : (
-                    columnTasks.map((task) => (
-                      <article
-                        key={task.id}
-                        className="kanban-task-card"
-                      >
-                        <div className="kanban-task-card-top">
-                          <strong>{task.title}</strong>
-                          <span
-                            className={`priority-pill priority-${task.priority}`}
-                          >
-                            {task.priority}
-                          </span>
-                        </div>
+                    columnTasks.map(
+                      (task) => (
+                        <article
+                          key={task.id}
+                          draggable
+                          className={[
+                            'kanban-task-card',
+                            draggingTaskId ===
+                            task.id
+                              ? 'kanban-task-card-dragging'
+                              : '',
+                          ]
+                            .filter(Boolean)
+                            .join(' ')}
+                          onDragStart={(
+                            event,
+                          ) =>
+                            handleDragStart(
+                              event,
+                              task,
+                            )
+                          }
+                          onDragEnd={
+                            handleDragEnd
+                          }
+                        >
+                          <div className="kanban-task-drag-hint">
+                            ⋮⋮ Drag
+                          </div>
 
-                        {task.description ? (
-                          <p>{task.description}</p>
-                        ) : null}
-
-                        <div className="kanban-task-meta">
-                          <span>
-                            {task.task_date ?? 'No date'}
-                          </span>
-                          <span>
-                            {task.assigned_to ??
-                              'Unassigned'}
-                          </span>
-                        </div>
-
-                        <div className="kanban-task-actions">
-                          {task.status === 'todo' ? (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                updateTask.mutate({
-                                  id: task.id,
-                                  input: {
-                                    status:
-                                      'in_progress',
-                                  },
-                                })
+                          <div className="kanban-task-card-top">
+                            <strong>
+                              {
+                                task.title
                               }
+                            </strong>
+
+                            <span
+                              className={`priority-pill priority-${task.priority}`}
                             >
-                              Start
-                            </button>
+                              {
+                                task.priority
+                              }
+                            </span>
+                          </div>
+
+                          {task.description ? (
+                            <p>
+                              {
+                                task.description
+                              }
+                            </p>
                           ) : null}
 
-                          {task.status ===
-                          'in_progress' ? (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                completeTask.mutate(
-                                  task.id,
-                                )
-                              }
-                            >
-                              Complete
-                            </button>
-                          ) : null}
+                          <div className="kanban-task-meta">
+                            <span>
+                              {task.task_date ??
+                                'No date'}
+                            </span>
 
-                          {task.status === 'done' ? (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                archiveTask.mutate(
-                                  task.id,
-                                )
-                              }
-                            >
-                              Archive
-                            </button>
-                          ) : null}
-                        </div>
-                      </article>
-                    ))
+                            <span>
+                              {task.assigned_to ??
+                                'Unassigned'}
+                            </span>
+                          </div>
+
+                          <div className="kanban-task-actions">
+                            {task.status ===
+                            'todo' ? (
+                              <button
+                                type="button"
+                                disabled={
+                                  updateTask.isPending
+                                }
+                                onClick={() =>
+                                  updateTask.mutate(
+                                    {
+                                      id: task.id,
+                                      input: {
+                                        status:
+                                          'in_progress',
+                                      },
+                                    },
+                                  )
+                                }
+                              >
+                                Start
+                              </button>
+                            ) : null}
+
+                            {task.status ===
+                            'in_progress' ? (
+                              <button
+                                type="button"
+                                disabled={
+                                  completeTask.isPending
+                                }
+                                onClick={() =>
+                                  completeTask.mutate(
+                                    task.id,
+                                  )
+                                }
+                              >
+                                Complete
+                              </button>
+                            ) : null}
+
+                            {task.status ===
+                            'done' ? (
+                              <button
+                                type="button"
+                                disabled={
+                                  archiveTask.isPending
+                                }
+                                onClick={() =>
+                                  archiveTask.mutate(
+                                    task.id,
+                                  )
+                                }
+                              >
+                                Archive
+                              </button>
+                            ) : null}
+                          </div>
+                        </article>
+                      ),
+                    )
                   )}
                 </div>
 
@@ -238,7 +463,9 @@ export function KanbanPage() {
                   type="button"
                   className="kanban-add-button"
                   onClick={() =>
-                    setShowCreateTask(true)
+                    setShowCreateTask(
+                      true,
+                    )
                   }
                 >
                   + Add task
@@ -251,7 +478,9 @@ export function KanbanPage() {
 
       <TaskDialog
         open={showCreateTask}
-        onClose={() => setShowCreateTask(false)}
+        onClose={() =>
+          setShowCreateTask(false)
+        }
       />
     </div>
   )
