@@ -111,14 +111,14 @@ export function MobileNavigation() {
               </NavLink>
             ))}
 
-            <button
-              type="button"
-              className="mobile-more-link"
-            onClick={closeMoreMenu}
-          >
-            <span aria-hidden="true">✦</span>
-            Workspace
-          </button>
+           <NavLink
+  to="/settings"
+  className="mobile-more-link"
+  onClick={closeMoreMenu}
+>
+  <span aria-hidden="true">✦</span>
+  Workspace
+</NavLink>
         </nav>
         </section>
       )}
