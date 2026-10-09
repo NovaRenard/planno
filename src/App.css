@@ -1574,3 +1574,109 @@
     flex-direction: column;
   }
 }
+
+/* =========================================================
+   GLOBAL BUTTON INTERACTIONS
+   ========================================================= */
+
+button {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease,
+    opacity 150ms ease,
+    transform 150ms ease;
+}
+
+button:not(:disabled) {
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  filter: brightness(0.985);
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+button:focus-visible {
+  outline: 3px solid rgba(79, 70, 229, 0.22);
+  outline-offset: 2px;
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  filter: none;
+}
+
+/* Primary buttons */
+
+.primary-action:hover:not(:disabled) {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 12px 26px rgba(79, 70, 229, 0.24);
+}
+
+.primary-action:active:not(:disabled) {
+  transform:
+    translateY(0)
+    scale(0.97);
+
+  box-shadow:
+    0 6px 14px rgba(79, 70, 229, 0.18);
+}
+
+/* Secondary / ghost buttons */
+
+.secondary-action:hover:not(:disabled),
+.ghost-button:hover:not(:disabled),
+.state-action:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  background: var(--surface-soft);
+  color: var(--text);
+
+  transform: translateY(-1px);
+}
+
+.secondary-action:active:not(:disabled),
+.ghost-button:active:not(:disabled),
+.state-action:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* Small action buttons inside cards */
+
+.template-card-actions button:hover:not(:disabled),
+.archive-task-actions button:hover:not(:disabled),
+.kanban-task-actions button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.template-card-actions button:active:not(:disabled),
+.archive-task-actions button:active:not(:disabled),
+.kanban-task-actions button:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+/* Respect accessibility preference */
+
+@media (prefers-reduced-motion: reduce) {
+  button {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  button:hover:not(:disabled),
+  button:active:not(:disabled) {
+    transform: none !important;
+  }
+}
