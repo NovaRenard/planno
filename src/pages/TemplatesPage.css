@@ -1,27 +1,25 @@
 .template-notice {
-    position: fixed;
-    right: 24px;
-    bottom: 24px;
-    z-index: 1200;
+position: fixed;
+right: 24px;
+bottom: 24px;
+z-index: 1200;
 
-    width: min(390px, calc(100vw - 32px));
-    min-height: 58px;
-    padding: 12px 12px 12px 14px;
+  width: min(390px, calc(100vw - 32px));
+  min-height: 58px;
+  padding: 12px 12px 12px 14px;
 
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 
-    border: 1px solid var(--border);
-    border-radius: 15px;
-    
-    background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 15px;
+
+  background: #ffffff;
 
   box-shadow:
-    0 18px 50px
-      rgba(15, 23, 42, 0.16),
-    0 4px 12px
-      rgba(15, 23, 42, 0.08);
+    0 18px 50px rgba(15, 23, 42, 0.16),
+    0 4px 12px rgba(15, 23, 42, 0.08);
 
   color: var(--text);
 
@@ -60,7 +58,7 @@
 }
 
 .template-notice-success
-  .template-notice-icon {
+.template-notice-icon {
   background:
     rgba(34, 197, 94, 0.12);
 
@@ -68,7 +66,7 @@
 }
 
 .template-notice-error
-  .template-notice-icon {
+.template-notice-icon {
   background:
     rgba(239, 68, 68, 0.12);
 
@@ -104,7 +102,9 @@
 }
 
 .template-notice > button:hover {
-  background: var(--surface-soft);
+  background:
+    var(--surface-soft);
+
   color: var(--text);
 }
 
@@ -119,16 +119,20 @@
 }
 
 .template-action-button:hover:not(:disabled) {
-  transform: translateY(-1px);
+  transform:
+    translateY(-1px);
 }
 
 .template-action-button:active:not(:disabled) {
-  transform: scale(0.96);
+  transform:
+    scale(0.96);
 }
 
 .template-action-working {
   opacity: 0.72;
-  transform: scale(0.97);
+
+  transform:
+    scale(0.97);
 }
 
 .template-action-working::after {
@@ -143,8 +147,8 @@
 
   vertical-align: -1px;
 
-  border: 2px solid
-    currentColor;
+  border:
+    2px solid currentColor;
 
   border-right-color:
     transparent;
@@ -182,92 +186,6 @@
     330ms ease;
 }
 
-@keyframes template-notice-in {
-  from {
-    opacity: 0;
-    transform:
-      translateY(14px)
-      scale(0.97);
-  }
-
-  to {
-    opacity: 1;
-    transform:
-      translateY(0)
-      scale(1);
-  }
-}
-
-@keyframes template-button-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes template-action-pop {
-  0% {
-    transform: scale(1);
-  }
-
-  45% {
-    transform: scale(1.04);
-  }
-
-  100% {
-    transform: scale(1);
-  }
-}
-
-@keyframes template-action-shake {
-  0%,
-  100% {
-    transform:
-      translateX(0);
-  }
-
-  25% {
-    transform:
-      translateX(-3px);
-  }
-
-  50% {
-    transform:
-      translateX(3px);
-  }
-
-  75% {
-    transform:
-      translateX(-2px);
-  }
-}
-
-@media (max-width: 640px) {
-  .template-notice {
-    right: 16px;
-    bottom: 16px;
-    left: 16px;
-
-    width: auto;
-  }
-}
-
-@media (
-  prefers-reduced-motion:
-    reduce
-) {
-  .template-notice,
-  .template-action-button,
-  .template-action-success,
-  .template-action-error {
-    animation: none;
-    transition: none;
-  }
-
-  .template-action-working::after {
-    animation-duration: 1.2s;
-  }
-}
-
 .template-confirm-backdrop {
   position: fixed;
   inset: 0;
@@ -282,16 +200,15 @@
   background:
     rgba(15, 23, 42, 0.5);
 
-  backdrop-filter: blur(4px);
+  backdrop-filter:
+    blur(4px);
 }
 
-.template-confirm-dialog {
+.template-confirm-dialog,
+.template-edit-dialog {
   width: min(440px, 100%);
 
   padding: 24px;
-
-  display: grid;
-  gap: 18px;
 
   border: 1px solid var(--border);
   border-radius: 20px;
@@ -300,11 +217,16 @@
 
   box-shadow:
     0 24px 70px
-      rgba(15, 23, 42, 0.22);
+    rgba(15, 23, 42, 0.22);
 
   animation:
     template-confirm-in
     180ms ease-out;
+}
+
+.template-confirm-dialog {
+  display: grid;
+  gap: 18px;
 }
 
 .template-confirm-icon {
@@ -326,7 +248,8 @@
   font-weight: 900;
 }
 
-.template-confirm-dialog h3 {
+.template-confirm-dialog h3,
+.template-edit-dialog h3 {
   margin: 0 0 8px;
 
   color: var(--text);
@@ -382,12 +305,207 @@
 }
 
 .template-delete-confirm-button:active:not(:disabled) {
-  transform: scale(0.97);
+  transform:
+    scale(0.97);
 }
 
 .template-delete-confirm-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* Edit template */
+
+.template-edit-dialog {
+  width: min(560px, 100%);
+}
+
+.template-edit-header {
+  margin-bottom: 20px;
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.template-edit-header
+.simple-page-eyebrow {
+  margin-bottom: 5px;
+}
+
+.template-edit-close {
+  width: 38px;
+  height: 38px;
+
+  flex: 0 0 auto;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid var(--border);
+  border-radius: 11px;
+
+  background:
+    var(--surface-soft);
+
+  color:
+    var(--text-soft);
+
+  font: inherit;
+  font-size: 21px;
+
+  cursor: pointer;
+}
+
+.template-edit-close:hover:not(:disabled) {
+  border-color:
+    var(--border-strong);
+
+  background: #ffffff;
+
+  color: var(--text);
+}
+
+.template-edit-form {
+  display: grid;
+  gap: 17px;
+}
+
+.template-edit-form label {
+  display: grid;
+  gap: 7px;
+}
+
+.template-edit-form label > span {
+  color: var(--text-soft);
+
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.template-edit-form input,
+.template-edit-form textarea,
+.template-edit-form select {
+  width: 100%;
+  box-sizing: border-box;
+
+  padding: 11px 13px;
+
+  border:
+    1px solid var(--border);
+
+  border-radius: 12px;
+
+  background: #ffffff;
+
+  color: var(--text);
+
+  font: inherit;
+
+  outline: none;
+
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.template-edit-form textarea {
+  resize: vertical;
+
+  min-height: 105px;
+}
+
+.template-edit-form input:focus,
+.template-edit-form textarea:focus,
+.template-edit-form select:focus {
+  border-color:
+    var(--primary);
+
+  box-shadow:
+    0 0 0 3px
+    rgba(79, 70, 229, 0.12);
+}
+
+.template-edit-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 12px;
+}
+
+.template-edit-actions {
+  padding-top: 6px;
+
+  display: flex;
+  justify-content: flex-end;
+
+  gap: 10px;
+}
+
+@keyframes template-notice-in {
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(14px)
+      scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+@keyframes template-button-spin {
+  to {
+    transform:
+      rotate(360deg);
+  }
+}
+
+@keyframes template-action-pop {
+  0% {
+    transform: scale(1);
+  }
+
+  45% {
+    transform: scale(1.04);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes template-action-shake {
+  0%,
+  100% {
+    transform:
+      translateX(0);
+  }
+
+  25% {
+    transform:
+      translateX(-3px);
+  }
+
+  50% {
+    transform:
+      translateX(3px);
+  }
+
+  75% {
+    transform:
+      translateX(-2px);
+  }
 }
 
 @keyframes template-confirm-in {
@@ -409,21 +527,60 @@
 }
 
 @media (max-width: 640px) {
+  .template-notice {
+    right: 16px;
+    bottom: 16px;
+    left: 16px;
+
+    width: auto;
+  }
+
   .template-confirm-backdrop {
     padding: 16px;
+
     align-items: flex-end;
   }
 
-  .template-confirm-dialog {
+  .template-confirm-dialog,
+  .template-edit-dialog {
     width: 100%;
+
     border-radius: 20px;
   }
 
-  .template-confirm-actions {
-    flex-direction: column-reverse;
+  .template-confirm-actions,
+  .template-edit-actions {
+    flex-direction:
+      column-reverse;
   }
 
-  .template-confirm-actions button {
+  .template-confirm-actions button,
+  .template-edit-actions button {
     width: 100%;
+  }
+
+  .template-edit-grid {
+    grid-template-columns:
+      1fr;
+  }
+}
+
+@media (
+  prefers-reduced-motion:
+    reduce
+) {
+  .template-notice,
+  .template-action-button,
+  .template-action-success,
+  .template-action-error,
+  .template-confirm-dialog,
+  .template-edit-dialog {
+    animation: none;
+    transition: none;
+  }
+
+  .template-action-working::after {
+    animation-duration:
+      1.2s;
   }
 }

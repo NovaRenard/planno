@@ -8,14 +8,26 @@ import { EmptyState } from '../components/states/EmptyState'
 import { ErrorState } from '../components/states/ErrorState'
 import { LoadingState } from '../components/states/LoadingState'
 import { useAuth } from '../features/auth/AuthProvider'
+
 import {
   useCreateTaskFromTemplate,
   useCreateTemplate,
   useDeleteTemplate,
   useDuplicateTemplate,
   useTemplates,
+  useUpdateTemplate,
 } from '../features/templates/template.queries'
+
 import { useWorkspace } from '../features/workspaces/WorkspaceProvider'
+
+import type {
+  TaskPriority,
+  TaskStatus,
+} from '../foundation/types/task'
+
+import type {
+  Template,
+} from '../foundation/types/template'
 
 import './TemplatesPage.css'
 
@@ -39,6 +51,14 @@ type PendingDelete = {
   title: string
 }
 
+type EditFormState = {
+  id: string
+  title: string
+  description: string
+  status: TaskStatus
+  priority: TaskPriority
+}
+
 function getErrorMessage(
   error: unknown,
   fallback: string,
@@ -46,6 +66,19 @@ function getErrorMessage(
   return error instanceof Error
     ? error.message
     : fallback
+}
+
+function createEditState(
+  template: Template,
+): EditFormState {
+  return {
+    id: template.id,
+    title: template.title,
+    description:
+      template.description ?? '',
+    status: template.status,
+    priority: template.priority,
+  }
 }
 
 export function TemplatesPage() {
@@ -59,7 +92,8 @@ export function TemplatesPage() {
   const workspaceId =
     currentWorkspace?.id ?? ''
 
-  const userId = user?.id ?? ''
+  const userId =
+    user?.id ?? ''
 
   const {
     data: templates = [],
@@ -69,6 +103,9 @@ export function TemplatesPage() {
 
   const createTemplate =
     useCreateTemplate()
+
+  const updateTemplate =
+    useUpdateTemplate()
 
   const deleteTemplate =
     useDeleteTemplate()
@@ -103,7 +140,9 @@ export function TemplatesPage() {
   const [
     notice,
     setNotice,
-  ] = useState<Notice | null>(null)
+  ] = useState<Notice | null>(
+    null,
+  )
 
   const [
     actionState,
@@ -119,6 +158,13 @@ export function TemplatesPage() {
     null,
   )
 
+  const [
+    editingTemplate,
+    setEditingTemplate,
+  ] = useState<EditFormState | null>(
+    null,
+  )
+
   useEffect(() => {
     if (!notice) {
       return
@@ -130,20 +176,33 @@ export function TemplatesPage() {
       }, 3200)
 
     return () => {
-      window.clearTimeout(timeoutId)
+      window.clearTimeout(
+        timeoutId,
+      )
     }
   }, [notice])
 
   useEffect(() => {
-    if (!pendingDelete) {
+    if (
+      !pendingDelete &&
+      !editingTemplate
+    ) {
       return
     }
 
     function handleKeyDown(
       event: KeyboardEvent,
     ) {
-      if (event.key === 'Escape') {
-        setPendingDelete(null)
+      if (
+        event.key === 'Escape'
+      ) {
+        if (
+          !deleteTemplate.isPending &&
+          !updateTemplate.isPending
+        ) {
+          setPendingDelete(null)
+          setEditingTemplate(null)
+        }
       }
     }
 
@@ -167,9 +226,16 @@ export function TemplatesPage() {
         handleKeyDown,
       )
     }
-  }, [pendingDelete])
+  }, [
+    pendingDelete,
+    editingTemplate,
+    deleteTemplate.isPending,
+    updateTemplate.isPending,
+  ])
 
-  function isWorking(key: string) {
+  function isWorking(
+    key: string,
+  ) {
     return (
       actionState?.key === key &&
       actionState.status ===
@@ -180,7 +246,9 @@ export function TemplatesPage() {
   function getActionClass(
     key: string,
   ) {
-    if (actionState?.key !== key) {
+    if (
+      actionState?.key !== key
+    ) {
       return 'template-action-button'
     }
 
@@ -218,7 +286,8 @@ export function TemplatesPage() {
 
       setNotice({
         type: 'success',
-        message: successMessage,
+        message:
+          successMessage,
       })
 
       return true
@@ -230,10 +299,11 @@ export function TemplatesPage() {
 
       setNotice({
         type: 'error',
-        message: getErrorMessage(
-          error,
-          errorMessage,
-        ),
+        message:
+          getErrorMessage(
+            error,
+            errorMessage,
+          ),
       })
 
       return false
@@ -250,7 +320,8 @@ export function TemplatesPage() {
   }
 
   async function handleSubmit(
-    event: FormEvent<HTMLFormElement>,
+    event:
+      FormEvent<HTMLFormElement>,
   ) {
     event.preventDefault()
 
@@ -273,19 +344,25 @@ export function TemplatesPage() {
         key: 'create',
 
         action: () =>
-          createTemplate.mutateAsync({
-            title: title.trim(),
+          createTemplate.mutateAsync(
+            {
+              title:
+                title.trim(),
 
-            description:
-              description.trim() ||
-              null,
+              description:
+                description.trim() ||
+                null,
 
-            status: 'todo',
-            priority: 'medium',
-            created_by: userId,
-            workspace_id:
-              workspaceId,
-          }),
+              status: 'todo',
+              priority: 'medium',
+
+              created_by:
+                userId,
+
+              workspace_id:
+                workspaceId,
+            },
+          ),
 
         successMessage:
           'Template created successfully.',
@@ -301,6 +378,72 @@ export function TemplatesPage() {
     setTitle('')
     setDescription('')
     setShowForm(false)
+  }
+
+  async function handleEditSubmit(
+    event:
+      FormEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault()
+
+    if (!editingTemplate) {
+      return
+    }
+
+    const trimmedTitle =
+      editingTemplate.title.trim()
+
+    if (!trimmedTitle) {
+      setNotice({
+        type: 'error',
+        message:
+          'Please enter a template title.',
+      })
+
+      return
+    }
+
+    const editKey =
+      `edit:${editingTemplate.id}`
+
+    const saved =
+      await performAction({
+        key: editKey,
+
+        action: () =>
+          updateTemplate.mutateAsync(
+            {
+              id:
+                editingTemplate.id,
+
+              input: {
+                title:
+                  trimmedTitle,
+
+                description:
+                  editingTemplate.description
+                    .trim() ||
+                  null,
+
+                status:
+                  editingTemplate.status,
+
+                priority:
+                  editingTemplate.priority,
+              },
+            },
+          ),
+
+        successMessage:
+          `"${trimmedTitle}" updated.`,
+
+        errorMessage:
+          'Could not update template.',
+      })
+
+    if (saved) {
+      setEditingTemplate(null)
+    }
   }
 
   async function confirmDelete() {
@@ -354,7 +497,8 @@ export function TemplatesPage() {
             className="template-notice-icon"
             aria-hidden="true"
           >
-            {notice.type === 'success'
+            {notice.type ===
+            'success'
               ? '✓'
               : '!'}
           </span>
@@ -384,9 +528,9 @@ export function TemplatesPage() {
           <h2>Templates</h2>
 
           <p className="simple-page-description">
-            Reuse common task setups
-            inside the current
-            workspace.
+            Reuse common task
+            setups inside the
+            current workspace.
           </p>
         </div>
 
@@ -395,7 +539,8 @@ export function TemplatesPage() {
           className="primary-action"
           onClick={() =>
             setShowForm(
-              (value) => !value,
+              (value) =>
+                !value,
             )
           }
         >
@@ -406,16 +551,21 @@ export function TemplatesPage() {
       {showForm ? (
         <form
           className="template-create-form simple-page-card"
-          onSubmit={handleSubmit}
+          onSubmit={
+            handleSubmit
+          }
         >
           <label>
             <span>Title</span>
 
             <input
               value={title}
-              onChange={(event) =>
+              onChange={(
+                event,
+              ) =>
                 setTitle(
-                  event.target.value,
+                  event.target
+                    .value,
                 )
               }
               placeholder="Weekly planning"
@@ -424,13 +574,20 @@ export function TemplatesPage() {
           </label>
 
           <label>
-            <span>Description</span>
+            <span>
+              Description
+            </span>
 
             <textarea
-              value={description}
-              onChange={(event) =>
+              value={
+                description
+              }
+              onChange={(
+                event,
+              ) =>
                 setDescription(
-                  event.target.value,
+                  event.target
+                    .value,
                 )
               }
               rows={3}
@@ -446,7 +603,9 @@ export function TemplatesPage() {
                 'create',
               )}
               onClick={() =>
-                setShowForm(false)
+                setShowForm(
+                  false,
+                )
               }
             >
               Cancel
@@ -466,7 +625,9 @@ export function TemplatesPage() {
                 !userId
               }
             >
-              {isWorking('create')
+              {isWorking(
+                'create',
+              )
                 ? 'Saving...'
                 : 'Save template'}
             </button>
@@ -482,12 +643,14 @@ export function TemplatesPage() {
           <ErrorState
             title="Could not load templates"
             message={
-              error instanceof Error
+              error instanceof
+              Error
                 ? error.message
                 : 'Please try again.'
             }
           />
-        ) : templates.length === 0 ? (
+        ) : templates.length ===
+          0 ? (
           <EmptyState
             title="No templates yet"
             description="Save a reusable task setup for this workspace."
@@ -511,12 +674,16 @@ export function TemplatesPage() {
 
                 return (
                   <article
-                    key={template.id}
+                    key={
+                      template.id
+                    }
                     className="template-card"
                   >
                     <div>
                       <strong>
-                        {template.title}
+                        {
+                          template.title
+                        }
                       </strong>
 
                       {template.description ? (
@@ -546,20 +713,23 @@ export function TemplatesPage() {
                           useKey,
                         )}
                         onClick={() => {
-                          void performAction({
-                            key: useKey,
+                          void performAction(
+                            {
+                              key: useKey,
 
-                            action: () =>
-                              createTask.mutateAsync(
-                                template.id,
-                              ),
+                              action:
+                                () =>
+                                  createTask.mutateAsync(
+                                    template.id,
+                                  ),
 
-                            successMessage:
-                              `Task created from "${template.title}".`,
+                              successMessage:
+                                `Task created from "${template.title}".`,
 
-                            errorMessage:
-                              'Could not create task from template.',
-                          })
+                              errorMessage:
+                                'Could not create task from template.',
+                            },
+                          )
                         }}
                         disabled={
                           createTask.isPending ||
@@ -567,9 +737,28 @@ export function TemplatesPage() {
                           !userId
                         }
                       >
-                        {isWorking(useKey)
+                        {isWorking(
+                          useKey,
+                        )
                           ? 'Using...'
                           : 'Use'}
+                      </button>
+
+                      <button
+                        type="button"
+                        className="template-action-button"
+                        onClick={() =>
+                          setEditingTemplate(
+                            createEditState(
+                              template,
+                            ),
+                          )
+                        }
+                        disabled={
+                          updateTemplate.isPending
+                        }
+                      >
+                        Edit
                       </button>
 
                       <button
@@ -578,20 +767,24 @@ export function TemplatesPage() {
                           duplicateKey,
                         )}
                         onClick={() => {
-                          void performAction({
-                            key: duplicateKey,
+                          void performAction(
+                            {
+                              key:
+                                duplicateKey,
 
-                            action: () =>
-                              duplicateTemplate.mutateAsync(
-                                template.id,
-                              ),
+                              action:
+                                () =>
+                                  duplicateTemplate.mutateAsync(
+                                    template.id,
+                                  ),
 
-                            successMessage:
-                              `"${template.title}" duplicated.`,
+                              successMessage:
+                                `"${template.title}" duplicated.`,
 
-                            errorMessage:
-                              'Could not duplicate template.',
-                          })
+                              errorMessage:
+                                'Could not duplicate template.',
+                            },
+                          )
                         }}
                         disabled={
                           duplicateTemplate.isPending ||
@@ -612,11 +805,14 @@ export function TemplatesPage() {
                           deleteKey,
                         )}
                         onClick={() =>
-                          setPendingDelete({
-                            id: template.id,
-                            title:
-                              template.title,
-                          })
+                          setPendingDelete(
+                            {
+                              id:
+                                template.id,
+                              title:
+                                template.title,
+                            },
+                          )
                         }
                         disabled={
                           deleteTemplate.isPending
@@ -633,17 +829,239 @@ export function TemplatesPage() {
         )}
       </div>
 
+      {editingTemplate ? (
+        <div
+          className="template-confirm-backdrop"
+          role="presentation"
+          onMouseDown={(
+            event,
+          ) => {
+            if (
+              event.target ===
+                event.currentTarget &&
+              !updateTemplate.isPending
+            ) {
+              setEditingTemplate(
+                null,
+              )
+            }
+          }}
+        >
+          <section
+            className="template-edit-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="template-edit-title"
+          >
+            <div className="template-edit-header">
+              <div>
+                <p className="simple-page-eyebrow">
+                  Template
+                </p>
+
+                <h3 id="template-edit-title">
+                  Edit template
+                </h3>
+              </div>
+
+              <button
+                type="button"
+                className="template-edit-close"
+                aria-label="Close edit template"
+                disabled={
+                  updateTemplate.isPending
+                }
+                onClick={() =>
+                  setEditingTemplate(
+                    null,
+                  )
+                }
+              >
+                ×
+              </button>
+            </div>
+
+            <form
+              className="template-edit-form"
+              onSubmit={
+                handleEditSubmit
+              }
+            >
+              <label>
+                <span>
+                  Title
+                </span>
+
+                <input
+                  autoFocus
+                  required
+                  value={
+                    editingTemplate.title
+                  }
+                  onChange={(
+                    event,
+                  ) =>
+                    setEditingTemplate(
+                      {
+                        ...editingTemplate,
+                        title:
+                          event.target
+                            .value,
+                      },
+                    )
+                  }
+                />
+              </label>
+
+              <label>
+                <span>
+                  Description
+                </span>
+
+                <textarea
+                  rows={4}
+                  value={
+                    editingTemplate.description
+                  }
+                  onChange={(
+                    event,
+                  ) =>
+                    setEditingTemplate(
+                      {
+                        ...editingTemplate,
+                        description:
+                          event.target
+                            .value,
+                      },
+                    )
+                  }
+                />
+              </label>
+
+              <div className="template-edit-grid">
+                <label>
+                  <span>
+                    Status
+                  </span>
+
+                  <select
+                    value={
+                      editingTemplate.status
+                    }
+                    onChange={(
+                      event,
+                    ) =>
+                      setEditingTemplate(
+                        {
+                          ...editingTemplate,
+                          status:
+                            event
+                              .target
+                              .value as TaskStatus,
+                        },
+                      )
+                    }
+                  >
+                    <option value="todo">
+                      To do
+                    </option>
+
+                    <option value="in_progress">
+                      In progress
+                    </option>
+
+                    <option value="done">
+                      Done
+                    </option>
+                  </select>
+                </label>
+
+                <label>
+                  <span>
+                    Priority
+                  </span>
+
+                  <select
+                    value={
+                      editingTemplate.priority
+                    }
+                    onChange={(
+                      event,
+                    ) =>
+                      setEditingTemplate(
+                        {
+                          ...editingTemplate,
+                          priority:
+                            event
+                              .target
+                              .value as TaskPriority,
+                        },
+                      )
+                    }
+                  >
+                    <option value="low">
+                      Low
+                    </option>
+
+                    <option value="medium">
+                      Medium
+                    </option>
+
+                    <option value="high">
+                      High
+                    </option>
+                  </select>
+                </label>
+              </div>
+
+              <div className="template-edit-actions">
+                <button
+                  type="button"
+                  className="secondary-action"
+                  disabled={
+                    updateTemplate.isPending
+                  }
+                  onClick={() =>
+                    setEditingTemplate(
+                      null,
+                    )
+                  }
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="primary-action"
+                  disabled={
+                    updateTemplate.isPending
+                  }
+                >
+                  {updateTemplate.isPending
+                    ? 'Saving...'
+                    : 'Save changes'}
+                </button>
+              </div>
+            </form>
+          </section>
+        </div>
+      ) : null}
+
       {pendingDelete ? (
         <div
           className="template-confirm-backdrop"
           role="presentation"
-          onMouseDown={(event) => {
+          onMouseDown={(
+            event,
+          ) => {
             if (
               event.target ===
-              event.currentTarget &&
+                event.currentTarget &&
               !deleteTemplate.isPending
             ) {
-              setPendingDelete(null)
+              setPendingDelete(
+                null,
+              )
             }
           }}
         >
@@ -664,13 +1082,15 @@ export function TemplatesPage() {
               </h3>
 
               <p id="template-delete-description">
-                Are you sure you want to
-                delete{' '}
+                Are you sure you
+                want to delete{' '}
                 <strong>
-                  {pendingDelete.title}
+                  {
+                    pendingDelete.title
+                  }
                 </strong>
-                ? This action cannot be
-                undone.
+                ? This action
+                cannot be undone.
               </p>
             </div>
 
@@ -682,7 +1102,9 @@ export function TemplatesPage() {
                   deleteTemplate.isPending
                 }
                 onClick={() =>
-                  setPendingDelete(null)
+                  setPendingDelete(
+                    null,
+                  )
                 }
               >
                 Cancel
