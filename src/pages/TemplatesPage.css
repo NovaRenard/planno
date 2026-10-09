@@ -1,0 +1,269 @@
+.template-notice {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 1200;
+
+    width: min(390px, calc(100vw - 32px));
+    min-height: 58px;
+    padding: 12px 12px 12px 14px;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    border: 1px solid var(--border);
+    border-radius: 15px;
+    
+    background: #ffffff;
+
+  box-shadow:
+    0 18px 50px
+      rgba(15, 23, 42, 0.16),
+    0 4px 12px
+      rgba(15, 23, 42, 0.08);
+
+  color: var(--text);
+
+  font-size: 13px;
+  font-weight: 700;
+
+  animation:
+    template-notice-in
+    220ms ease-out;
+}
+
+.template-notice-success {
+  border-color:
+    rgba(34, 197, 94, 0.32);
+}
+
+.template-notice-error {
+  border-color:
+    rgba(239, 68, 68, 0.34);
+}
+
+.template-notice-icon {
+  width: 28px;
+  height: 28px;
+
+  flex: 0 0 auto;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 999px;
+
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.template-notice-success
+  .template-notice-icon {
+  background:
+    rgba(34, 197, 94, 0.12);
+
+  color: #15803d;
+}
+
+.template-notice-error
+  .template-notice-icon {
+  background:
+    rgba(239, 68, 68, 0.12);
+
+  color: #dc2626;
+}
+
+.template-notice > span:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+}
+
+.template-notice > button {
+  width: 30px;
+  height: 30px;
+
+  flex: 0 0 auto;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 0;
+  border-radius: 9px;
+
+  background: transparent;
+  color: var(--text-faint);
+
+  font: inherit;
+  font-size: 20px;
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+.template-notice > button:hover {
+  background: var(--surface-soft);
+  color: var(--text);
+}
+
+.template-action-button {
+  position: relative;
+
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease,
+    border-color 150ms ease,
+    opacity 150ms ease;
+}
+
+.template-action-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.template-action-button:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.template-action-working {
+  opacity: 0.72;
+  transform: scale(0.97);
+}
+
+.template-action-working::after {
+  content: '';
+
+  width: 11px;
+  height: 11px;
+
+  margin-left: 7px;
+
+  display: inline-block;
+
+  vertical-align: -1px;
+
+  border: 2px solid
+    currentColor;
+
+  border-right-color:
+    transparent;
+
+  border-radius: 999px;
+
+  animation:
+    template-button-spin
+    650ms linear infinite;
+}
+
+.template-action-success {
+  border-color:
+    rgba(34, 197, 94, 0.55) !important;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(34, 197, 94, 0.1);
+
+  animation:
+    template-action-pop
+    420ms ease;
+}
+
+.template-action-error {
+  border-color:
+    rgba(239, 68, 68, 0.6) !important;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(239, 68, 68, 0.09);
+
+  animation:
+    template-action-shake
+    330ms ease;
+}
+
+@keyframes template-notice-in {
+  from {
+    opacity: 0;
+    transform:
+      translateY(14px)
+      scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+@keyframes template-button-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes template-action-pop {
+  0% {
+    transform: scale(1);
+  }
+
+  45% {
+    transform: scale(1.04);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes template-action-shake {
+  0%,
+  100% {
+    transform:
+      translateX(0);
+  }
+
+  25% {
+    transform:
+      translateX(-3px);
+  }
+
+  50% {
+    transform:
+      translateX(3px);
+  }
+
+  75% {
+    transform:
+      translateX(-2px);
+  }
+}
+
+@media (max-width: 640px) {
+  .template-notice {
+    right: 16px;
+    bottom: 16px;
+    left: 16px;
+
+    width: auto;
+  }
+}
+
+@media (
+  prefers-reduced-motion:
+    reduce
+) {
+  .template-notice,
+  .template-action-button,
+  .template-action-success,
+  .template-action-error {
+    animation: none;
+    transition: none;
+  }
+
+  .template-action-working::after {
+    animation-duration: 1.2s;
+  }
+}
