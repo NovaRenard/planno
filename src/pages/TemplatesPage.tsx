@@ -6,7 +6,6 @@ import {
 import { EmptyState } from '../components/states/EmptyState'
 import { ErrorState } from '../components/states/ErrorState'
 import { LoadingState } from '../components/states/LoadingState'
-
 import { useAuth } from '../features/auth/AuthProvider'
 
 import {
@@ -163,7 +162,6 @@ export function TemplatesPage() {
 
     await updateTemplate.mutateAsync({
       id: editingTemplateId,
-
       input: {
         title: editTitle.trim(),
         description:
@@ -187,8 +185,7 @@ export function TemplatesPage() {
           <h2>Templates</h2>
 
           <p className="simple-page-description">
-            Reuse common task setups inside
-            the current workspace.
+            Reuse common task setups inside the current workspace.
           </p>
         </div>
 
@@ -290,221 +287,216 @@ export function TemplatesPage() {
           />
         ) : (
           <div className="template-list">
-            {templates.map(
-              (template) => {
-                const isEditing =
-                  editingTemplateId ===
-                  template.id
+            {templates.map((template) => {
+              const isEditing =
+                editingTemplateId ===
+                template.id
 
-                if (isEditing) {
-                  return (
-                    <form
-                      key={template.id}
-                      className="template-create-form simple-page-card"
-                      onSubmit={
-                        handleUpdate
-                      }
-                    >
-                      <label>
-                        <span>Title</span>
-
-                        <input
-                          value={editTitle}
-                          onChange={(event) =>
-                            setEditTitle(
-                              event.target.value,
-                            )
-                          }
-                          required
-                        />
-                      </label>
-
-                      <label>
-                        <span>Description</span>
-
-                        <textarea
-                          value={editDescription}
-                          onChange={(event) =>
-                            setEditDescription(
-                              event.target.value,
-                            )
-                          }
-                          rows={3}
-                        />
-                      </label>
-
-                      <label>
-                        <span>Status</span>
-
-                        <select
-                          value={editStatus}
-                          onChange={(event) =>
-                            setEditStatus(
-                              event.target
-                                .value as TaskStatus,
-                            )
-                          }
-                        >
-                          <option value="todo">
-                            To do
-                          </option>
-
-                          <option value="in_progress">
-                            In progress
-                          </option>
-
-                          <option value="done">
-                            Done
-                          </option>
-                        </select>
-                      </label>
-
-                      <label>
-                        <span>Priority</span>
-
-                        <select
-                          value={editPriority}
-                          onChange={(event) =>
-                            setEditPriority(
-                              event.target
-                                .value as TaskPriority,
-                            )
-                          }
-                        >
-                          <option value="low">
-                            Low
-                          </option>
-
-                          <option value="medium">
-                            Medium
-                          </option>
-
-                          <option value="high">
-                            High
-                          </option>
-                        </select>
-                      </label>
-
-                      <div className="template-form-actions">
-                        <button
-                          type="button"
-                          className="secondary-action"
-                          onClick={
-                            stopEditing
-                          }
-                        >
-                          Cancel
-                        </button>
-
-                        <button
-                          type="submit"
-                          className="primary-action"
-                          disabled={
-                            updateTemplate.isPending
-                          }
-                        >
-                          {updateTemplate.isPending
-                            ? 'Saving...'
-                            : 'Save changes'}
-                        </button>
-                      </div>
-                    </form>
-                  )
-                }
-
+              if (isEditing) {
                 return (
-                  <article
+                  <form
                     key={template.id}
-                    className="template-card"
+                    className="template-create-form simple-page-card"
+                    onSubmit={handleUpdate}
                   >
-                    <div>
-                      <strong>
-                        {template.title}
-                      </strong>
+                    <label>
+                      <span>Title</span>
 
-                      {template.description ? (
-                        <p>
-                          {
-                            template.description
-                          }
-                        </p>
-                      ) : null}
-
-                      <span>
-                        {template.status.replace(
-                          '_',
-                          ' ',
-                        )}{' '}
-                        ·{' '}
-                        {template.priority}
-                      </span>
-                    </div>
-
-                    <div className="template-card-actions">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          createTask.mutate(
-                            template.id,
+                      <input
+                        value={editTitle}
+                        onChange={(event) =>
+                          setEditTitle(
+                            event.target.value,
                           )
                         }
-                        disabled={
-                          createTask.isPending ||
-                          !workspaceId ||
-                          !userId
+                        required
+                      />
+                    </label>
+
+                    <label>
+                      <span>Description</span>
+
+                      <textarea
+                        value={
+                          editDescription
+                        }
+                        onChange={(event) =>
+                          setEditDescription(
+                            event.target.value,
+                          )
+                        }
+                        rows={3}
+                      />
+                    </label>
+
+                    <label>
+                      <span>Status</span>
+
+                      <select
+                        value={editStatus}
+                        onChange={(event) =>
+                          setEditStatus(
+                            event.target
+                              .value as TaskStatus,
+                          )
                         }
                       >
-                        Use
+                        <option value="todo">
+                          To do
+                        </option>
+
+                        <option value="in_progress">
+                          In progress
+                        </option>
+
+                        <option value="done">
+                          Done
+                        </option>
+                      </select>
+                    </label>
+
+                    <label>
+                      <span>Priority</span>
+
+                      <select
+                        value={editPriority}
+                        onChange={(event) =>
+                          setEditPriority(
+                            event.target
+                              .value as TaskPriority,
+                          )
+                        }
+                      >
+                        <option value="low">
+                          Low
+                        </option>
+
+                        <option value="medium">
+                          Medium
+                        </option>
+
+                        <option value="high">
+                          High
+                        </option>
+                      </select>
+                    </label>
+
+                    <div className="template-form-actions">
+                      <button
+                        type="button"
+                        className="secondary-action"
+                        onClick={
+                          stopEditing
+                        }
+                      >
+                        Cancel
                       </button>
 
                       <button
-                        type="button"
-                        onClick={() =>
-                          startEditing(
-                            template,
-                          )
-                        }
+                        type="submit"
+                        className="primary-action"
                         disabled={
                           updateTemplate.isPending
                         }
                       >
-                        Edit
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          duplicateTemplate.mutate(
-                            template.id,
-                          )
-                        }
-                        disabled={
-                          duplicateTemplate.isPending ||
-                          !workspaceId ||
-                          !userId
-                        }
-                      >
-                        Duplicate
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          deleteTemplate.mutate(
-                            template.id,
-                          )
-                        }
-                        disabled={
-                          deleteTemplate.isPending
-                        }
-                      >
-                        Delete
+                        {updateTemplate.isPending
+                          ? 'Saving...'
+                          : 'Save changes'}
                       </button>
                     </div>
-                  </article>
+                  </form>
                 )
-              },
-            )}
+              }
+
+              return (
+                <article
+                  key={template.id}
+                  className="template-card"
+                >
+                  <div>
+                    <strong>
+                      {template.title}
+                    </strong>
+
+                    {template.description ? (
+                      <p>
+                        {
+                          template.description
+                        }
+                      </p>
+                    ) : null}
+
+                    <span>
+                      {template.status.replace(
+                        '_',
+                        ' ',
+                      )}{' '}
+                      ·{' '}
+                      {template.priority}
+                    </span>
+                  </div>
+
+                  <div className="template-card-actions">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        createTask.mutate(
+                          template.id,
+                        )
+                      }
+                      disabled={
+                        createTask.isPending ||
+                        !workspaceId ||
+                        !userId
+                      }
+                    >
+                      Use
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        startEditing(
+                          template,
+                        )
+                      }
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        duplicateTemplate.mutate(
+                          template.id,
+                        )
+                      }
+                      disabled={
+                        duplicateTemplate.isPending ||
+                        !workspaceId ||
+                        !userId
+                      }
+                    >
+                      Duplicate
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        deleteTemplate.mutate(
+                          template.id,
+                        )
+                      }
+                      disabled={
+                        deleteTemplate.isPending
+                      }
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </article>
+              )
+            })}
           </div>
         )}
       </div>
