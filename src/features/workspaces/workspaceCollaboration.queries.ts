@@ -6,8 +6,10 @@ import {
 
 import {
   acceptWorkspaceInvite,
+  getWorkspacePendingInvites,
   getMyWorkspaceInvites,
   inviteWorkspaceMember,
+  revokeWorkspaceInvite,
 } from './workspaceInviteService'
 
 import {
@@ -27,29 +29,41 @@ type UpdateMemberRoleInput = {
   role: Exclude<WorkspaceRole, 'owner'>
 }
 
-export function useWorkspaceMembers(
-  workspaceId: string,
-) {
+export function useWorkspaceMembers(workspaceId: string) {
   return useQuery({
-    queryKey: [
-      'workspace-members',
-      workspaceId,
-    ],
-    queryFn: () =>
-      getWorkspaceMembers(workspaceId),
+    queryKey: ['workspace-members', workspaceId],
+    queryFn: () => getWorkspaceMembers(workspaceId),
     enabled: Boolean(workspaceId),
   })
 }
 
-export function useMyWorkspaceInvites() {
+export function useMyWorkspaceInvites(email: string) {
   return useQuery({
-    queryKey: ['workspace-invites', 'mine'],
-    queryFn: getMyWorkspaceInvites,
+    queryKey: ['workspace-invites', 'mine', email],
+    queryFn: () => getMyWorkspaceInvites(email),
+    enabled: Boolean(email),
+  })
+}
+
+export function useWorkspacePendingInvites(
+  workspaceId: string,
+) {
+  return useQuery({
+    queryKey: [
+      'workspace-invites',
+      workspaceId,
+      'pending',
+    ],
+    queryFn: () =>
+      getWorkspacePendingInvites(workspaceId),
+    enabled: Boolean(workspaceId),
   })
 }
 
 export function useInviteWorkspaceMember(
   workspaceId: string,
+  workspaceName: string,
+  invitedBy: string,
 ) {
   const queryClient = useQueryClient()
 
@@ -58,17 +72,19 @@ export function useInviteWorkspaceMember(
       email,
       role,
     }: InviteMemberInput) =>
-      inviteWorkspaceMember(
+      inviteWorkspaceMember({
         workspaceId,
+        workspaceName,
+        invitedBy,
         email,
         role,
-      ),
-
+      }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: [
-          'workspace-members',
+          'workspace-invites',
           workspaceId,
+          'pending',
         ],
       })
     },
@@ -77,26 +93,41 @@ export function useInviteWorkspaceMember(
 
 export function useAcceptWorkspaceInvite(
   refreshWorkspaces: () => Promise<void>,
+  userId: string,
 ) {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (inviteId: string) =>
-      acceptWorkspaceInvite(inviteId),
-
+      acceptWorkspaceInvite(inviteId, userId),
     onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ['workspace-invites'],
+      })
+      await refreshWorkspaces()
+    },
+  })
+}
+
+export function useRevokeWorkspaceInvite(
+  workspaceId: string,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (inviteId: string) =>
+      revokeWorkspaceInvite(inviteId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ['workspace-invites'],
+      })
       await queryClient.invalidateQueries({
         queryKey: [
           'workspace-invites',
-          'mine',
+          workspaceId,
+          'pending',
         ],
       })
-
-      await queryClient.invalidateQueries({
-        queryKey: ['workspace-members'],
-      })
-
-      await refreshWorkspaces()
     },
   })
 }
@@ -116,7 +147,6 @@ export function useUpdateWorkspaceMemberRole(
         userId,
         role,
       ),
-
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: [
@@ -135,11 +165,7 @@ export function useRemoveWorkspaceMember(
 
   return useMutation({
     mutationFn: (userId: string) =>
-      removeWorkspaceMember(
-        workspaceId,
-        userId,
-      ),
-
+      removeWorkspaceMember(workspaceId, userId),
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: [

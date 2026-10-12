@@ -3,20 +3,29 @@ import {
   type FormEvent,
 } from 'react'
 
+import { EmptyState } from '../components/states/EmptyState'
+import { ErrorState } from '../components/states/ErrorState'
+import { LoadingState } from '../components/states/LoadingState'
 import { useAuth } from '../features/auth/AuthProvider'
 import {
   useAcceptWorkspaceInvite,
   useInviteWorkspaceMember,
   useMyWorkspaceInvites,
   useRemoveWorkspaceMember,
+  useRevokeWorkspaceInvite,
   useUpdateWorkspaceMemberRole,
   useWorkspaceMembers,
+  useWorkspacePendingInvites,
 } from '../features/workspaces/workspaceCollaboration.queries'
 import { useWorkspace } from '../features/workspaces/WorkspaceProvider'
 
 import type { WorkspaceRole } from '../features/workspaces/workspaceMemberService'
 
 type InviteRole = Exclude<WorkspaceRole, 'owner'>
+type StatusMessage = {
+  type: 'success' | 'error'
+  text: string
+}
 
 function getErrorMessage(
   error: unknown,
@@ -54,13 +63,20 @@ export function SettingsPage() {
     useState<InviteRole>('viewer')
 
   const [inviteMessage, setInviteMessage] =
-    useState<string | null>(null)
+    useState<StatusMessage | null>(null)
 
   const sharedWorkspaceId =
     currentWorkspace &&
     !currentWorkspace.is_personal
       ? currentWorkspace.id
       : ''
+  const sharedWorkspaceName =
+    currentWorkspace &&
+    !currentWorkspace.is_personal
+      ? currentWorkspace.name
+      : ''
+  const userId = user?.id ?? ''
+  const userEmail = user?.email ?? ''
 
   const {
     data: members = [],
@@ -74,11 +90,21 @@ export function SettingsPage() {
     data: invitations = [],
     isLoading: invitationsLoading,
     error: invitationsError,
-  } = useMyWorkspaceInvites()
+  } = useMyWorkspaceInvites(userEmail)
+
+  const {
+    data: pendingInvites = [],
+    isLoading: pendingInvitesLoading,
+    error: pendingInvitesError,
+  } = useWorkspacePendingInvites(
+    sharedWorkspaceId,
+  )
 
   const inviteMember =
     useInviteWorkspaceMember(
       sharedWorkspaceId,
+      sharedWorkspaceName,
+      userId,
     )
 
   const updateMemberRole =
@@ -91,9 +117,15 @@ export function SettingsPage() {
       sharedWorkspaceId,
     )
 
+  const revokeInvite =
+    useRevokeWorkspaceInvite(
+      sharedWorkspaceId,
+    )
+
   const acceptInvite =
     useAcceptWorkspaceInvite(
       refreshWorkspaces,
+      userId,
     )
 
   const currentMember =
@@ -161,16 +193,41 @@ export function SettingsPage() {
 
       setInviteEmail('')
       setInviteRole('viewer')
-      setInviteMessage(
-        'Invitation sent successfully.',
-      )
+      setInviteMessage({
+        type: 'success',
+        text: 'Invitation sent successfully.',
+      })
     } catch (error) {
-      setInviteMessage(
-        getErrorMessage(
+      setInviteMessage({
+        type: 'error',
+        text: getErrorMessage(
           error,
           'Could not send invitation.',
         ),
-      )
+      })
+    }
+  }
+
+  async function handleRevokeInvite(
+    inviteId: string,
+  ) {
+    setInviteMessage(null)
+
+    try {
+      await revokeInvite.mutateAsync(inviteId)
+
+      setInviteMessage({
+        type: 'success',
+        text: 'Invitation revoked.',
+      })
+    } catch (error) {
+      setInviteMessage({
+        type: 'error',
+        text: getErrorMessage(
+          error,
+          'Could not revoke invitation.',
+        ),
+      })
     }
   }
 
@@ -309,25 +366,31 @@ export function SettingsPage() {
       </div>
 
       <div className="simple-page-card">
-        <h3>My Invitations</h3>
+        <div className="workspace-card-header">
+          <div>
+            <h3>My Invitations</h3>
+            <p>
+              Accept shared workspaces that were
+              sent to your email.
+            </p>
+          </div>
+        </div>
 
         {invitationsLoading ? (
-          <p>Loading invitations...</p>
+          <LoadingState message="Loading invitations..." />
         ) : invitationsError ? (
-          <p
-            className="auth-message auth-message-error"
-            role="alert"
-          >
-            {getErrorMessage(
-              invitationsError,
-              'Could not load invitations.',
+          <ErrorState
+            title="Could not load invitations"
+            message={getErrorMessage(
+                invitationsError,
+                'Please try again.',
             )}
-          </p>
+          />
         ) : invitations.length === 0 ? (
-          <p>
-            You have no pending
-            invitations.
-          </p>
+          <EmptyState
+            title="No invitations"
+            description="When someone invites you to a workspace, it will appear here."
+          />
         ) : (
           <div className="workspace-list">
             {invitations.map(
@@ -344,7 +407,7 @@ export function SettingsPage() {
                     </strong>
 
                     <span>
-                      Role:{' '}
+                      {invite.email} · Role:{' '}
                       {invite.role}
                     </span>
                   </div>
@@ -511,9 +574,18 @@ export function SettingsPage() {
 
           {isOwner ? (
             <div className="simple-page-card">
-              <h3>
-                Invite Member
-              </h3>
+              <div className="workspace-card-header">
+                <div>
+                  <h3>
+                    Invite Member
+                  </h3>
+
+                  <p>
+                    Send workspace access to an
+                    editor or viewer by email.
+                  </p>
+                </div>
+              </div>
 
               <form
                 className="workspace-create-form"
@@ -568,14 +640,86 @@ export function SettingsPage() {
               {inviteMessage ? (
                 <p
                   className={
-                    inviteMember.error
+                    inviteMessage.type ===
+                    'error'
                       ? 'auth-message auth-message-error'
                       : 'auth-message'
                   }
+                  role={
+                    inviteMessage.type ===
+                    'error'
+                      ? 'alert'
+                      : 'status'
+                  }
                 >
-                  {inviteMessage}
+                  {inviteMessage.text}
                 </p>
               ) : null}
+
+              <div className="workspace-pending-invites">
+                <div className="workspace-section-heading">
+                  <h4>Pending invitations</h4>
+
+                  <span>
+                    {pendingInvites.length}
+                  </span>
+                </div>
+
+                {pendingInvitesLoading ? (
+                  <LoadingState message="Loading pending invitations..." />
+                ) : pendingInvitesError ? (
+                  <ErrorState
+                    title="Could not load pending invitations"
+                    message={getErrorMessage(
+                      pendingInvitesError,
+                      'Please try again.',
+                    )}
+                  />
+                ) : pendingInvites.length === 0 ? (
+                  <EmptyState
+                    title="No pending invitations"
+                    description="Invites you send from this workspace will appear here until they are accepted or revoked."
+                  />
+                ) : (
+                  <div className="workspace-list">
+                    {pendingInvites.map(
+                      (invite) => (
+                        <div
+                          key={invite.id}
+                          className="workspace-list-item"
+                        >
+                          <div>
+                            <strong>
+                              {invite.email}
+                            </strong>
+
+                            <span>
+                              Role: {invite.role}
+                            </span>
+                          </div>
+
+                          <button
+                            type="button"
+                            className="secondary-action"
+                            disabled={
+                              revokeInvite.isPending
+                            }
+                            onClick={() =>
+                              void handleRevokeInvite(
+                                invite.id,
+                              )
+                            }
+                          >
+                            {revokeInvite.isPending
+                              ? 'Revoking...'
+                              : 'Revoke'}
+                          </button>
+                        </div>
+                      ),
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           ) : null}
         </>
