@@ -31,8 +31,9 @@ export function ArchivePage() {
       <h2>Archive</h2>
 
       <p className="simple-page-description">
-        Review archived tasks, restore them or delete them permanently.
-      </p>
+  Review archived tasks, restore them or delete them permanently.
+  Archived tasks are automatically deleted after 30 days.
+</p>
 
       <div className="simple-page-card">
         {workspaceLoading || isLoading ? (
