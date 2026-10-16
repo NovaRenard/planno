@@ -7,6 +7,7 @@ const mainNavigation = [
   { label: 'Overview', icon: '⌂', to: '/' },
   { label: 'Kanban', icon: '▦', to: '/kanban' },
   { label: 'Tasks', icon: '✓', to: '/tasks' },
+  { label: 'Projects', icon: '▧', to: '/projects' },
   { label: 'Calendar', icon: '◷', to: '/calendar' },
   { label: 'Templates', icon: '◇', to: '/templates' },
   { label: 'Archive', icon: '□', to: '/archive' },

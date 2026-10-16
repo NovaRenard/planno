@@ -16,7 +16,9 @@ import {
   deleteTask,
   getActiveTasks,
   getArchivedTasks,
+  getProjectTasks,
   getTaskById,
+  reorderProjectTasks,
   restoreTask,
   updateTask,
 } from './task.service'
@@ -26,6 +28,17 @@ export function useActiveTasks(workspaceId: string) {
     queryKey: ['tasks', workspaceId, 'active'],
     queryFn: () => getActiveTasks(workspaceId),
     enabled: Boolean(workspaceId),
+  })
+}
+
+export function useProjectTasks(
+  workspaceId: string,
+  projectId: string,
+) {
+  return useQuery({
+    queryKey: ['tasks', workspaceId, 'project', projectId, 'active'],
+    queryFn: () => getProjectTasks(workspaceId, projectId),
+    enabled: Boolean(workspaceId && projectId),
   })
 }
 
@@ -76,6 +89,36 @@ export function useUpdateTask() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: ['tasks'],
+      })
+    },
+  })
+}
+
+export function useReorderProjectTasks() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      workspaceId,
+      projectId,
+      orderedTaskIds,
+    }: {
+      workspaceId: string
+      projectId: string
+      orderedTaskIds: string[]
+    }) => reorderProjectTasks(workspaceId, projectId, orderedTaskIds),
+    onSuccess: async (_data, variables) => {
+      await queryClient.invalidateQueries({
+        queryKey: [
+          'tasks',
+          variables.workspaceId,
+          'project',
+          variables.projectId,
+          'active',
+        ],
+      })
+      await queryClient.invalidateQueries({
+        queryKey: ['tasks', variables.workspaceId, 'active'],
       })
     },
   })

@@ -11,6 +11,8 @@ export type Task = {
     assigned_to: string | null
     created_by: string
     workspace_id: string
+    project_id: string | null
+    position: number
     created_at: string
     updated_at: string
     completed_at: string | null
@@ -26,6 +28,8 @@ export type CreateTaskInput = {
     assigned_to: string | null
     created_by: string
     workspace_id: string
+    project_id?: string | null
+    position?: number
 }
 export type UpdateTaskInput = {
     title?: string
@@ -35,4 +39,5 @@ export type UpdateTaskInput = {
     task_date?: string | null
     due_at?: string | null
     assigned_to?: string | null
+    position?: number
 }

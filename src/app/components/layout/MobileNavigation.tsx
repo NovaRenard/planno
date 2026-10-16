@@ -26,6 +26,11 @@ const mobileNavigation = [
 
 const moreNavigation = [
   {
+    label: 'Projects',
+    icon: '▧',
+    to: '/projects',
+  },
+  {
     label: 'Table',
     icon: '☷',
     to: '/tasks',

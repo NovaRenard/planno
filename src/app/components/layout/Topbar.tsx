@@ -22,6 +22,10 @@ const pageTitles: Record<
     eyebrow: 'Task management',
     title: 'All tasks',
   },
+  '/projects': {
+    eyebrow: 'Workspace planning',
+    title: 'Projects',
+  },
   '/calendar': {
     eyebrow: 'Planning',
     title: 'Calendar',
@@ -68,10 +72,10 @@ export function Topbar() {
   } = useWorkspace()
 
   const currentPage =
-    pageTitles[location.pathname] ?? {
-      eyebrow: 'Planno',
-      title: 'Workspace',
-    }
+    pageTitles[location.pathname] ??
+    (location.pathname.startsWith('/projects/')
+      ? { eyebrow: 'Workspace planning', title: 'Project' }
+      : { eyebrow: 'Planno', title: 'Workspace' })
 
   const fullName =
     user?.user_metadata?.full_name ||

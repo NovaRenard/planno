@@ -23,6 +23,57 @@ export async function getActiveTasks(
   return (data ?? []) as Task[]
 }
 
+export async function getProjectTasks(
+  workspaceId: string,
+  projectId: string,
+): Promise<Task[]> {
+  const { data, error } = await supabase
+    .from('tasks')
+    .select('*')
+    .eq('workspace_id', workspaceId)
+    .eq('project_id', projectId)
+    .is('archived_at', null)
+    .order('position', { ascending: true })
+    .order('created_at', { ascending: true })
+
+  if (error) {
+    throw error
+  }
+
+  return (data ?? []) as Task[]
+}
+
+export async function reorderProjectTasks(
+  workspaceId: string,
+  projectId: string,
+  orderedTaskIds: string[],
+): Promise<void> {
+  const results = await Promise.all(
+    orderedTaskIds.map((id, position) =>
+      supabase
+        .from('tasks')
+        .update({ position })
+        .eq('id', id)
+        .eq('workspace_id', workspaceId)
+        .eq('project_id', projectId)
+        .select('id')
+        .maybeSingle()
+    )
+  )
+
+  const failedResult = results.find(
+    (result) => result.error || !result.data,
+  )
+
+  if (failedResult?.error) {
+    throw failedResult.error
+  }
+
+  if (failedResult) {
+    throw new Error('One or more project tasks could not be reordered.')
+  }
+}
+
 export async function getTaskById(
   id: string,
   workspaceId: string,
@@ -44,9 +95,33 @@ export async function getTaskById(
 export async function createTask(
   input: CreateTaskInput,
 ): Promise<Task> {
+  let position = input.position
+
+  if (input.project_id) {
+    const { data: lastTask, error: positionError } = await supabase
+      .from('tasks')
+      .select('position')
+      .eq('workspace_id', input.workspace_id)
+      .eq('project_id', input.project_id)
+      .order('position', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (positionError) {
+      throw positionError
+    }
+
+    position = (lastTask?.position ?? -1) + 1
+  }
+
+  const taskInput = {
+    ...input,
+    ...(position === undefined ? {} : { position }),
+  }
+
   const { data, error } = await supabase
     .from('tasks')
-    .insert(input)
+    .insert(taskInput)
     .select()
     .single()
 

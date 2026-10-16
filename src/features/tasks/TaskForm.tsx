@@ -72,6 +72,7 @@ type TaskFormValues = z.infer<typeof taskFormSchema>
 type TaskFormProps = {
   createdBy: string
   workspaceId: string
+  projectId?: string
   onSuccess?: (task: Task) => void
 }
 
@@ -94,7 +95,8 @@ function emptyToNull(value: string) {
 function toCreateTaskInput(
   values: TaskFormValues,
   createdBy: string,
-  workspaceId: string
+  workspaceId: string,
+  projectId?: string
 ): CreateTaskInput {
   return {
     title: values.title.trim(),
@@ -106,12 +108,14 @@ function toCreateTaskInput(
     assigned_to: emptyToNull(values.assigned_to),
     created_by: createdBy,
     workspace_id: workspaceId,
+    project_id: projectId ?? null,
   }
 }
 
 export function TaskForm({
   createdBy,
   workspaceId,
+  projectId,
   onSuccess,
 }: TaskFormProps) {
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -131,7 +135,12 @@ export function TaskForm({
 
     try {
       const task = await createTask.mutateAsync(
-        toCreateTaskInput(values, createdBy, workspaceId)
+        toCreateTaskInput(
+          values,
+          createdBy,
+          workspaceId,
+          projectId
+        )
       )
 
       reset(defaultValues)
