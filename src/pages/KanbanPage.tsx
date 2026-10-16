@@ -52,6 +52,7 @@ export function KanbanPage() {
   const { currentWorkspace, loading: workspaceLoading } =
     useWorkspace()
   const workspaceId = currentWorkspace?.id ?? ''
+
   const {
     data: tasks = [],
     isLoading,
@@ -61,8 +62,11 @@ export function KanbanPage() {
   const updateTask = useUpdateTask()
   const completeTask = useCompleteTask()
   const archiveTask = useArchiveTask()
+
   const [showCreateTask, setShowCreateTask] =
     useState(false)
+  const [mobileStatus, setMobileStatus] =
+    useState<TaskStatus>('todo')
 
   return (
     <div className="kanban-page">
@@ -98,155 +102,186 @@ export function KanbanPage() {
           }
         />
       ) : (
-        <div className="kanban-board">
-          {columns.map((column) => {
-            const columnTasks = tasks.filter(
-              (task) => task.status === column.status,
-            )
+        <>
+          <nav
+            className="kanban-mobile-tabs"
+            aria-label="Kanban status"
+          >
+            {columns.map((column) => {
+              const count = tasks.filter(
+                (task) => task.status === column.status,
+              ).length
 
-            return (
-              <section
-                key={column.status}
-                className="kanban-column"
-              >
-                <header className="kanban-column-header">
-                  <div>
-                    <span className="kanban-column-hint">
-                      {column.hint}
-                    </span>
-
-                    <div className="kanban-column-title">
-                      <span
-                        className={`kanban-dot kanban-dot-${column.accent}`}
-                      />
-                      <h3>{column.title}</h3>
-                    </div>
-                  </div>
-
-                  <span className="kanban-count">
-                    {columnTasks.length}
-                  </span>
-                </header>
-
-                <div className="kanban-column-metrics">
-                  <span>
-                    <strong>{columnTasks.length}</strong>
-                    cards
-                  </span>
-
-                  <span>
-                    <strong>
-                      {tasks.length === 0
-                        ? 0
-                        : Math.round(
-                            (columnTasks.length /
-                              tasks.length) *
-                              100,
-                          )}
-                      %
-                    </strong>
-                    load
-                  </span>
-                </div>
-
-                <div className="kanban-column-content">
-                  {columnTasks.length === 0 ? (
-                    <EmptyState
-                      title="Nothing here yet"
-                      description={column.description}
-                    />
-                  ) : (
-                    columnTasks.map((task) => (
-                      <article
-                        key={task.id}
-                        className="kanban-task-card"
-                      >
-                        <div className="kanban-task-card-top">
-                          <strong>{task.title}</strong>
-                          <span
-                            className={`priority-pill priority-${task.priority}`}
-                          >
-                            {task.priority}
-                          </span>
-                        </div>
-
-                        {task.description ? (
-                          <p>{task.description}</p>
-                        ) : null}
-
-                        <div className="kanban-task-meta">
-                          <span>
-                            {task.task_date ?? 'No date'}
-                          </span>
-                          <span>
-                            {task.assigned_to ??
-                              'Unassigned'}
-                          </span>
-                        </div>
-
-                        <div className="kanban-task-actions">
-                          {task.status === 'todo' ? (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                updateTask.mutate({
-                                  id: task.id,
-                                  input: {
-                                    status:
-                                      'in_progress',
-                                  },
-                                })
-                              }
-                            >
-                              Start
-                            </button>
-                          ) : null}
-
-                          {task.status ===
-                          'in_progress' ? (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                completeTask.mutate(
-                                  task.id,
-                                )
-                              }
-                            >
-                              Complete
-                            </button>
-                          ) : null}
-
-                          {task.status === 'done' ? (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                archiveTask.mutate(
-                                  task.id,
-                                )
-                              }
-                            >
-                              Archive
-                            </button>
-                          ) : null}
-                        </div>
-                      </article>
-                    ))
-                  )}
-                </div>
-
+              return (
                 <button
+                  key={column.status}
                   type="button"
-                  className="kanban-add-button"
+                  className={
+                    mobileStatus === column.status
+                      ? 'kanban-mobile-tab kanban-mobile-tab-active'
+                      : 'kanban-mobile-tab'
+                  }
+                  aria-pressed={
+                    mobileStatus === column.status
+                  }
                   onClick={() =>
-                    setShowCreateTask(true)
+                    setMobileStatus(column.status)
                   }
                 >
-                  + Add task
+                  <span>{column.title}</span>
+                  <span className="kanban-mobile-tab-count">
+                    {count}
+                  </span>
                 </button>
-              </section>
-            )
-          })}
-        </div>
+              )
+            })}
+          </nav>
+
+          <div className="kanban-board">
+            {columns.map((column) => {
+              const columnTasks = tasks.filter(
+                (task) => task.status === column.status,
+              )
+
+              return (
+                <section
+                  key={column.status}
+                  className={
+                    mobileStatus === column.status
+                      ? 'kanban-column kanban-column-mobile-active'
+                      : 'kanban-column'
+                  }
+                >
+                  <header className="kanban-column-header">
+                    <div>
+                      <span className="kanban-column-hint">
+                        {column.hint}
+                      </span>
+
+                      <div className="kanban-column-title">
+                        <span
+                          className={`kanban-dot kanban-dot-${column.accent}`}
+                        />
+                        <h3>{column.title}</h3>
+                      </div>
+                    </div>
+
+                    <span className="kanban-count">
+                      {columnTasks.length}
+                    </span>
+                  </header>
+
+                  <div className="kanban-column-metrics">
+                    <span>
+                      <strong>{columnTasks.length}</strong>
+                      cards
+                    </span>
+
+                    <span>
+                      <strong>
+                        {tasks.length === 0
+                          ? 0
+                          : Math.round(
+                              (columnTasks.length /
+                                tasks.length) *
+                                100,
+                            )}
+                        %
+                      </strong>
+                      load
+                    </span>
+                  </div>
+
+                  <div className="kanban-column-content">
+                    {columnTasks.length === 0 ? (
+                      <EmptyState
+                        title="Nothing here yet"
+                        description={column.description}
+                      />
+                    ) : (
+                      columnTasks.map((task) => (
+                        <article
+                          key={task.id}
+                          className="kanban-task-card"
+                        >
+                          <div className="kanban-task-card-top">
+                            <strong>{task.title}</strong>
+                            <span
+                              className={`priority-pill priority-${task.priority}`}
+                            >
+                              {task.priority}
+                            </span>
+                          </div>
+
+                          {task.description ? (
+                            <p>{task.description}</p>
+                          ) : null}
+
+                          <div className="kanban-task-meta">
+                            <span>
+                              {task.task_date ?? 'No date'}
+                            </span>
+                            <span>
+                              {task.assigned_to ?? 'Unassigned'}
+                            </span>
+                          </div>
+
+                          <div className="kanban-task-actions">
+                            {task.status === 'todo' ? (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  updateTask.mutate({
+                                    id: task.id,
+                                    input: {
+                                      status: 'in_progress',
+                                    },
+                                  })
+                                }
+                              >
+                                Start
+                              </button>
+                            ) : null}
+
+                            {task.status === 'in_progress' ? (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  completeTask.mutate(task.id)
+                                }
+                              >
+                                Complete
+                              </button>
+                            ) : null}
+
+                            {task.status === 'done' ? (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  archiveTask.mutate(task.id)
+                                }
+                              >
+                                Archive
+                              </button>
+                            ) : null}
+                          </div>
+                        </article>
+                      ))
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    className="kanban-add-button"
+                    onClick={() => setShowCreateTask(true)}
+                  >
+                    + Add task
+                  </button>
+                </section>
+              )
+            })}
+          </div>
+        </>
       )}
 
       <TaskDialog

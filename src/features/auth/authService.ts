@@ -91,3 +91,13 @@ export async function updatePassword(
     password: newPassword,
   })
 }
+
+export async function updateFullName(
+  fullName: string,
+) {
+  return supabase.auth.updateUser({
+    data: {
+      full_name: fullName,
+    },
+  })
+}
