@@ -97,7 +97,7 @@ export async function updateFullName(
 ) {
   return supabase.auth.updateUser({
     data: {
-      full_name: fullName,
+      full_name: fullName.trim(),
     },
   })
 }

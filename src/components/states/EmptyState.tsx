@@ -22,9 +22,11 @@ export function EmptyState({
 
       <h3>{title}</h3>
 
-      {description ? <p>{description}</p> : null}
+      {description ? (
+        <p>{description}</p>
+      ) : null}
 
-      {actionLabel ? (
+      {actionLabel && onAction ? (
         <button
           type="button"
           className="state-action"

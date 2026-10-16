@@ -18,63 +18,80 @@ import {
   updateTemplate,
 } from './template.service'
 
-export function useTemplates(workspaceId: string) {
+export function useTemplates(
+  workspaceId: string,
+) {
   return useQuery({
-    queryKey: ['templates', workspaceId],
-    queryFn: () => getTemplates(workspaceId),
+    queryKey: [
+      'templates',
+      workspaceId,
+    ],
+    queryFn: () =>
+      getTemplates(workspaceId),
     enabled: Boolean(workspaceId),
   })
 }
 
 export function useCreateTemplate() {
-  const queryClient = useQueryClient()
+  const queryClient =
+    useQueryClient()
 
   return useMutation({
-    mutationFn: (input: CreateTemplateInput) =>
-      createTemplate(input),
+    mutationFn: (
+      input: CreateTemplateInput,
+    ) => createTemplate(input),
 
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ['templates'],
-      })
+      await queryClient.invalidateQueries(
+        {
+          queryKey: ['templates'],
+        },
+      )
     },
   })
 }
 
-type UpdateTemplateMutationInput = {
-  id: string
-  input: UpdateTemplateInput
-}
-
 export function useUpdateTemplate() {
-  const queryClient = useQueryClient()
+  const queryClient =
+    useQueryClient()
 
   return useMutation({
     mutationFn: ({
       id,
       input,
-    }: UpdateTemplateMutationInput) =>
-      updateTemplate(id, input),
+    }: {
+      id: string
+      input: UpdateTemplateInput
+    }) =>
+      updateTemplate(
+        id,
+        input,
+      ),
 
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ['templates'],
-      })
+      await queryClient.invalidateQueries(
+        {
+          queryKey: ['templates'],
+        },
+      )
     },
   })
 }
 
 export function useDeleteTemplate() {
-  const queryClient = useQueryClient()
+  const queryClient =
+    useQueryClient()
 
   return useMutation({
     mutationFn: (id: string) =>
       deleteTemplate(id),
 
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ['templates'],
-      })
+      await queryClient.invalidateQueries(
+        {
+          queryKey: ['templates'],
+        },
+      )
     },
   })
 }
@@ -83,7 +100,8 @@ export function useDuplicateTemplate(
   workspaceId: string,
   createdBy: string,
 ) {
-  const queryClient = useQueryClient()
+  const queryClient =
+    useQueryClient()
 
   return useMutation({
     mutationFn: (id: string) =>
@@ -94,9 +112,11 @@ export function useDuplicateTemplate(
       ),
 
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ['templates'],
-      })
+      await queryClient.invalidateQueries(
+        {
+          queryKey: ['templates'],
+        },
+      )
     },
   })
 }
@@ -105,7 +125,8 @@ export function useCreateTaskFromTemplate(
   workspaceId: string,
   createdBy: string,
 ) {
-  const queryClient = useQueryClient()
+  const queryClient =
+    useQueryClient()
 
   return useMutation({
     mutationFn: (id: string) =>
@@ -116,9 +137,11 @@ export function useCreateTaskFromTemplate(
       ),
 
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ['tasks'],
-      })
+      await queryClient.invalidateQueries(
+        {
+          queryKey: ['tasks'],
+        },
+      )
     },
   })
 }
