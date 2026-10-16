@@ -1,6 +1,6 @@
 import {
+  useEffect,
   useState,
-  type FormEvent,
 } from 'react'
 
 import { useAuth } from '../features/auth/AuthProvider'
@@ -14,50 +14,33 @@ export function ProfilePage() {
   const { user } = useAuth()
   const { currentWorkspace } = useWorkspace()
 
-  const fullName =
-    user?.user_metadata?.full_name ||
-    user?.email ||
-    'User'
-
-  const [name, setName] = useState(fullName)
-  const [savingName, setSavingName] =
-    useState(false)
+  const [fullName, setFullName] = useState('')
+  const [saving, setSaving] = useState(false)
   const [loggingOut, setLoggingOut] =
     useState(false)
+  const [message, setMessage] = useState('')
+  const [errorMessage, setErrorMessage] =
+    useState('')
 
-  const [nameError, setNameError] =
-    useState<string | null>(null)
+  useEffect(() => {
+    setFullName(
+      user?.user_metadata?.full_name ||
+        '',
+    )
+  }, [user])
 
-  const [nameSuccess, setNameSuccess] =
-    useState<string | null>(null)
+  async function handleSaveName() {
+    const trimmedName = fullName.trim()
 
-  async function handleNameSubmit(
-    event: FormEvent<HTMLFormElement>,
-  ) {
-    event.preventDefault()
+    setMessage('')
+    setErrorMessage('')
 
-    setNameError(null)
-    setNameSuccess(null)
-
-    const trimmedName = name.trim()
-
-    if (trimmedName.length < 2) {
-      setNameError(
-        'Name must contain at least 2 characters.',
-      )
-
+    if (!trimmedName) {
+      setErrorMessage('Name cannot be empty.')
       return
     }
 
-    if (trimmedName.length > 80) {
-      setNameError(
-        'Name must contain 80 characters or fewer.',
-      )
-
-      return
-    }
-
-    setSavingName(true)
+    setSaving(true)
 
     try {
       const { error } =
@@ -67,18 +50,16 @@ export function ProfilePage() {
         throw error
       }
 
-      setName(trimmedName)
-      setNameSuccess(
-        'Your name has been updated.',
-      )
+      setFullName(trimmedName)
+      setMessage('Name updated successfully.')
     } catch (error) {
-      setNameError(
+      setErrorMessage(
         error instanceof Error
           ? error.message
-          : 'Unable to update your name.',
+          : 'Could not update name.',
       )
     } finally {
-      setSavingName(false)
+      setSaving(false)
     }
   }
 
@@ -92,6 +73,11 @@ export function ProfilePage() {
     }
   }
 
+  const displayedName =
+    user?.user_metadata?.full_name ||
+    user?.email ||
+    'User'
+
   return (
     <div className="simple-page">
       <p className="simple-page-eyebrow">
@@ -101,16 +87,53 @@ export function ProfilePage() {
       <h2>Profile</h2>
 
       <p className="simple-page-description">
-        View and update your account information.
+        Manage your account and current workspace.
       </p>
 
       <div className="simple-page-card">
-        <h3>{fullName}</h3>
+        <h3>{displayedName}</h3>
 
         <div className="account-detail-grid">
           <div className="account-detail-row">
-            <strong>Email</strong>
+            <strong>Name</strong>
 
+            <div>
+              <input
+                type="text"
+                value={fullName}
+                onChange={(event) =>
+                  setFullName(event.target.value)
+                }
+                placeholder="Enter your name"
+                disabled={saving}
+              />
+
+              <button
+                type="button"
+                className="primary-action"
+                onClick={handleSaveName}
+                disabled={
+                  saving ||
+                  !fullName.trim()
+                }
+              >
+                {saving
+                  ? 'Saving...'
+                  : 'Save name'}
+              </button>
+
+              {message && (
+                <p>{message}</p>
+              )}
+
+              {errorMessage && (
+                <p>{errorMessage}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="account-detail-row">
+            <strong>Email</strong>
             <span>
               {user?.email ?? '—'}
             </span>
@@ -118,62 +141,12 @@ export function ProfilePage() {
 
           <div className="account-detail-row">
             <strong>Workspace</strong>
-
             <span>
-              {currentWorkspace?.name ?? '—'}
+              {currentWorkspace?.name ??
+                '—'}
             </span>
           </div>
         </div>
-
-        <form
-          className="auth-form"
-          onSubmit={handleNameSubmit}
-          noValidate
-        >
-          <label htmlFor="profile-full-name">
-            <span>Display name</span>
-
-            <input
-              id="profile-full-name"
-              type="text"
-              value={name}
-              onChange={(event) =>
-                setName(event.target.value)
-              }
-              autoComplete="name"
-              maxLength={80}
-              disabled={savingName}
-            />
-          </label>
-
-          {nameError && (
-            <p
-              className="auth-message auth-message-error"
-              role="alert"
-            >
-              {nameError}
-            </p>
-          )}
-
-          {nameSuccess && (
-            <p
-              className="auth-message"
-              role="status"
-            >
-              {nameSuccess}
-            </p>
-          )}
-
-          <button
-            type="submit"
-            className="primary-action"
-            disabled={savingName}
-          >
-            {savingName
-              ? 'Saving...'
-              : 'Save name'}
-          </button>
-        </form>
 
         <button
           type="button"
@@ -188,4 +161,4 @@ export function ProfilePage() {
       </div>
     </div>
   )
-} 
+}
